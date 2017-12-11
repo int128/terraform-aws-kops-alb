@@ -1,0 +1,15 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: ingress
+  namespace: hello
+  annotations:
+    alb.ingress.kubernetes.io/scheme: internet-facing
+spec:
+  rules:
+  - host: echo.kops.hidetake.org
+    http:
+      paths:
+      - backend:
+          serviceName: echoserver
+          servicePort: 80
