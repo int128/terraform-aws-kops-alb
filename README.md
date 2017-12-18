@@ -2,6 +2,13 @@
 
 Hello world with kops, alb-ingress-controller, ALB and ACM.
 
+## Prerequisite
+
+```sh
+brew install kops
+brew install kubernetes-helm
+```
+
 ## Setup a cluster
 
 Configure IAM, S3 and Route53 as https://github.com/kubernetes/kops/blob/master/docs/aws.md.
@@ -12,16 +19,22 @@ Export cluster info as environment variables.
 # .env
 export AWS_ACCESS_KEY_ID=
 export AWS_SECRET_ACCESS_KEY=
-export NAME=kops.example.com
-export KOPS_STATE_STORE=s3://kops-example-com-us-west-2
-export DOMAIN_NAME=kops.example.com
+export KOPS_NAME=kops.example.com
+export KOPS_STATE_STORE=s3://hello-kops-xxxxxxxx
 ```
 
 Create a cluster.
 
 ```sh
-kops create cluster --zones us-west-2a,us-west-2b,us-west-2c --master-size t2.medium --node-size t2.micro $NAME
-kops update cluster $NAME --yes
+kops create cluster \
+  --name $KOPS_NAME \
+  --zones us-west-2a,us-west-2b,us-west-2c \
+  --master-size t2.micro \
+  --node-size t2.micro
+  #--ssh-access=x.x.x.x/x
+  #--admin-access=x.x.x.x/x
+  #--ssh-public-key=key.pub
+kops update cluster $KOPS_NAME --yes
 kops validate cluster
 kubectl get nodes
 ```
@@ -76,5 +89,5 @@ curl -v https://echo.$DOMAIN_NAME
 ## Cleanup
 
 ```sh
-kops delete cluster --name $NAME --yes
+kops delete cluster --name $KOPS_NAME --yes
 ```
