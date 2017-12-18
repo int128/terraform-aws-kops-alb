@@ -39,6 +39,24 @@ kops validate cluster
 kubectl get nodes
 ```
 
+Initialize the helm.
+
+```sh
+helm init
+helm repo update
+```
+
+## Install the dashboard
+
+Install the dashboard.
+
+```sh
+helm install --name hello-kubernetes-dashboard stable/kubernetes-dashboard
+kubectl proxy
+```
+
+Open http://localhost:8001/api/v1/namespaces/default/services/hello-kubernetes-dashboard-kubernetes-dashboard/proxy/.
+
 ## Setup an ingress
 
 This is based on https://github.com/coreos/alb-ingress-controller/blob/master/docs/walkthrough.md.
