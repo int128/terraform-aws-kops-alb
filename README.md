@@ -9,7 +9,7 @@ brew install kops
 brew install kubernetes-helm
 ```
 
-## Setup a cluster
+## Create a cluster
 
 Configure IAM, S3 and Route53 as https://github.com/kubernetes/kops/blob/master/docs/aws.md.
 
@@ -57,52 +57,25 @@ kubectl proxy
 
 Open http://localhost:8001/api/v1/namespaces/default/services/hello-kubernetes-dashboard-kubernetes-dashboard/proxy/.
 
-## Setup an ingress
+## Create an ingress
 
-This is based on https://github.com/coreos/alb-ingress-controller/blob/master/docs/walkthrough.md.
+Configure IAM and Security Group as https://github.com/coreos/alb-ingress-controller/blob/master/docs/setup.md.
 
-Attach [a policy](https://github.com/coreos/alb-ingress-controller/blob/master/examples/iam-policy.json) to the IAM role of nodes.
+- Attach [the IAM policy](https://github.com/coreos/alb-ingress-controller/blob/master/examples/iam-policy.json) to the IAM role for nodes.
+- Create a security group for ALBs.
+- Acquire a certificate for the wildcard domain on ACM.
 
-Add following tags to subnets of nodes.
-
-- `kubernetes.io/cluster/hello`: `shared`
-- `kubernetes.io/role/alb-ingress`: (empty value)
-
-Create a default backend and an ingress controller.
+Install an ingress controller and create an ingress.
 
 ```sh
-kubectl apply -f https://raw.githubusercontent.com/coreos/alb-ingress-controller/master/examples/default-backend.yaml
-
-kubectl apply -f alb-ingress-controller.yaml
-kubectl -n kube-system get pods
-kubectl logs -n kube-system alb-ingress-controller-***
+helm registry install quay.io/coreos/alb-ingress-controller-helm --set awsRegion=us-west-2 --set rbac.create=false
 ```
 
-Create an ingress.
+Fix security groups, subnets and the certificate in `ingress.yaml`.
 
 ```sh
 kubectl apply -f hello
-kubectl logs -n kube-system -f --tail=100 alb-ingress-controller-***
 ```
-
-## Setup Route53 and ALB
-
-Create an A record of wildcard domain `*.DOMAIN_NAME` pointing to the ALB created.
-
-Then, access to the endpint.
-
-```sh
-curl -v http://echo.$DOMAIN_NAME
-```
-
-Acquire a certificate for the wildcard domain on ACM.
-
-Add a HTTPS lister to the ALB. Fix the associated security group to accept incoming HTTPS access.
-
-```sh
-curl -v https://echo.$DOMAIN_NAME
-```
-
 
 ## Cleanup
 
