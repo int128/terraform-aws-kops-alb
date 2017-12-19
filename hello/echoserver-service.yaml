@@ -4,10 +4,10 @@ metadata:
   name: echoserver
   namespace: hello
 spec:
+  type: ClusterIP
   ports:
-  - port: 80
+  - protocol: TCP
+    port: 8080
     targetPort: 8080
-    protocol: TCP
-  type: NodePort
   selector:
     app: echoserver

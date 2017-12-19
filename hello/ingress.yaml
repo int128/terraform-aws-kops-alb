@@ -3,17 +3,19 @@ kind: Ingress
 metadata:
   name: ingress
   namespace: hello
-  annotations:
-    kubernetes.io/ingress.class: alb
-    alb.ingress.kubernetes.io/scheme: internet-facing
-    alb.ingress.kubernetes.io/security-groups: sg-887ae6f4
-    alb.ingress.kubernetes.io/subnets: subnet-5210431a,subnet-67dc353d
 spec:
   rules:
-  - host: echo.kops.example.com
+  - host: echoservice1.example.com
     http:
       paths:
       - path: /
         backend:
           serviceName: echoserver
-          servicePort: 80
+          servicePort: 8080
+  - host: echoservice2.example.com
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: echoserver
+          servicePort: 8080

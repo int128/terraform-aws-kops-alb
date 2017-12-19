@@ -1,6 +1,6 @@
 # Hello kubernetes with HTTPS
 
-Hello world with kops, alb-ingress-controller, ALB and ACM.
+Hello world with kops, nginx-ingress-controller, ALB and ACM.
 
 ## Prerequisite
 
@@ -57,25 +57,33 @@ kubectl proxy
 
 Open http://localhost:8001/api/v1/namespaces/default/services/hello-kubernetes-dashboard-kubernetes-dashboard/proxy/.
 
-## Create an ingress
+## Install the ingress controller
 
-Configure IAM and Security Group as https://github.com/coreos/alb-ingress-controller/blob/master/docs/setup.md.
-
-- Attach [the IAM policy](https://github.com/coreos/alb-ingress-controller/blob/master/examples/iam-policy.json) to the IAM role for nodes.
-- Create a security group for ALBs.
-- Acquire a certificate for the wildcard domain on ACM.
-
-Install an ingress controller and create an ingress.
+Install the ingress controller.
 
 ```sh
-helm registry install quay.io/coreos/alb-ingress-controller-helm --set awsRegion=us-west-2 --set rbac.create=false
+helm install stable/nginx-ingress \
+  --set controller.service.type=NodePort \
+  --set controller.service.nodePorts.http=30080
 ```
 
-Fix security groups, subnets and the certificate in `ingress.yaml`.
+Create AWS objects.
+
+- Create a security group for the ALB.
+- Permit access from the ALB to nodes. 
+- Issue a certificate for the wildcard domain on ACM.
+- Create an ALB and route to port 30080 of nodes.
+- Attach the auto scaling group of nodes to the target group.
+
+## Deploy
+
+Create a deployment, service and ingress.
 
 ```sh
 kubectl apply -f hello
 ```
+
+Open https://echoservice1.example.com.
 
 ## Cleanup
 
