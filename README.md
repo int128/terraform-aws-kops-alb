@@ -1,6 +1,6 @@
 # Hello kubernetes with HTTPS
 
-Hello world with kops, nginx-ingress-controller, ALB and ACM.
+Hello world with kops, nginx-ingress-controller, ALB, ACM and persistent volume (EBS).
 
 ## Prerequisite
 
@@ -75,7 +75,7 @@ Create AWS objects.
 - Create an ALB and route to port 30080 of nodes.
 - Attach the auto scaling group of nodes to the target group.
 
-## Deploy
+## Deploy echoserver
 
 Create a deployment, service and ingress.
 
@@ -84,6 +84,17 @@ kubectl apply -f hello
 ```
 
 Open https://echoservice1.example.com.
+
+## Deploy Jenkins
+
+Create a deployment, service and persistent volume claim (EBS).
+Also update the ingress.
+
+```sh
+kubectl apply -f jenkins
+```
+
+Open https://jenkins.example.com.
 
 ## Cleanup
 
