@@ -51,20 +51,18 @@ helm repo update
 Install the dashboard.
 
 ```sh
-helm install --name hello-kubernetes-dashboard stable/kubernetes-dashboard
+helm install stable/kubernetes-dashboard --namespace kube-system --name kubernetes-dashboard
 kubectl proxy
 ```
 
-Open http://localhost:8001/api/v1/namespaces/default/services/hello-kubernetes-dashboard-kubernetes-dashboard/proxy/.
+Open http://localhost:8001/api/v1/namespaces/kube-system/services/kubernetes-dashboard-kubernetes-dashboard/proxy/.
 
 ## Install the ingress controller
 
 Install the ingress controller.
 
 ```sh
-helm install stable/nginx-ingress \
-  --set controller.service.type=NodePort \
-  --set controller.service.nodePorts.http=30080
+helm install stable/nginx-ingress --namespace kube-system --name nginx-ingress -f helm-nginx-ingress-config.yaml
 ```
 
 Create AWS objects.
