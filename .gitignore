@@ -1,3 +1,5 @@
 /.env
 /.sshkey
 /.sshkey.pub
+
+.terraform
