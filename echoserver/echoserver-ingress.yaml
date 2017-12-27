@@ -1,18 +1,11 @@
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
-  name: ingress
+  name: echoserver-ingress
   namespace: hello
 spec:
   rules:
-  - host: echoservice1.example.com
-    http:
-      paths:
-      - path: /
-        backend:
-          serviceName: echoserver
-          servicePort: 8080
-  - host: echoservice2.example.com
+  - host: echoserver.kops.example.com
     http:
       paths:
       - path: /

@@ -117,25 +117,24 @@ Open http://localhost:8001/api/v1/namespaces/kube-system/services/kubernetes-das
 Create a deployment, service and ingress.
 
 ```sh
-kubectl apply -f hello
+kubectl apply -f echoserver
 ```
 
-Open https://echoservice1.example.com.
+Open https://echoserver.kops.example.com.
 
 ### Deploy Jenkins
 
-Create a deployment, service and persistent volume claim (EBS).
-Also update the ingress.
+Create a deployment, service, persistent volume claim (EBS) and ingress.
 
 ```sh
 kubectl apply -f jenkins
 ```
 
-Open https://jenkins.example.com.
+Open https://jenkins.kops.example.com.
 
 ## Cleanup
 
 ```sh
 terraform destroy
-kops delete cluster --name $KOPS_NAME --yes
+kops delete cluster --name $TF_VAR_kops_cluster_name --yes
 ```
