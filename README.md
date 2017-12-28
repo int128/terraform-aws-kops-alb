@@ -1,6 +1,14 @@
-# Hello kubernetes with HTTPS
+# Kubernetes starter with kops and Terraform
 
-Hello world with kops, nginx-ingress-controller, ALB, ACM and persistent volume (EBS).
+This is a Kubernetes starter with kops and Terraform to build the following stack.
+
+![k8s-alb-kops-terraform.png](k8s-alb-kops-terraform.png)
+
+Goals:
+
+- You can operate the cluster by `kops`
+- You can access to the Kunernetes API by `kubectl`
+- You can access to services via a HTTPS wildcard domain
 
 ## Getting Started
 
@@ -30,17 +38,17 @@ Set the cluster information.
 # .env
 export TF_VAR_kops_cluster_name=kops.example.com
 export AWS_DEFAULT_REGION=us-west-2
-export KOPS_STATE_STORE=s3.$TF_VAR_kops_cluster_name
 ```
 
 Create a bucket for the kops state store and the Terraform state store.
 
 ```sh
 aws s3api create-bucket \
-  --bucket $KOPS_STATE_STORE \
-  --region $AWS_DEFAULT_REGION
+  --bucket s3.$TF_VAR_kops_cluster_name \
+  --region $AWS_DEFAULT_REGION \
+  --create-bucket-configuration LocationConstraint=$AWS_DEFAULT_REGION
 aws s3api put-bucket-versioning \
-  --bucket $KOPS_STATE_STORE \
+  --bucket s3.$TF_VAR_kops_cluster_name \
   --versioning-configuration Status=Enabled
 ```
 
@@ -55,15 +63,19 @@ ssh-keygen -f .sshkey
 Create a cluster.
 
 ```sh
+export KOPS_STATE_STORE=s3://s3.$TF_VAR_kops_cluster_name
 kops create cluster \
   --name ${TF_VAR_kops_cluster_name} \
   --zones ${AWS_DEFAULT_REGION}a \
+  --authorization RBAC \
   --master-size t2.micro \
+  --master-volume-size 20 \
   --node-size t2.micro \
+  --node-volume-size 20 \
   --ssh-public-key=.sshkey.pub
   #--ssh-access=x.x.x.x/x
   #--admin-access=x.x.x.x/x
-kops update cluster $KOPS_NAME --yes
+kops update cluster $TF_VAR_kops_cluster_name --yes
 kops validate cluster
 kubectl get nodes
 ```
@@ -75,8 +87,8 @@ Initialize Terraform.
 ```sh
 cd ./aws
 terraform init \
-  -backend-config="bucket=$KOPS_STATE_STORE" \
-  -backend-config="key=terraform.tfstate"
+  -backend-config="bucket=s3.$TF_VAR_kops_cluster_name" \
+  -backend-config="key=$TF_VAR_kops_cluster_name.tfstate"
 ```
 
 Create a load balancer and update the Route53 zone.
@@ -86,27 +98,28 @@ terraform plan
 terraform apply
 ```
 
-### Install the ingress controller
+### Install system services
 
 Initialize the helm.
 
 ```sh
-helm init
+kubectl create -f helm/rbac-config.yaml
+helm init --service-account tiller
 helm repo update
 ```
 
 Install the ingress controller.
 
 ```sh
-helm install stable/nginx-ingress --namespace kube-system --name nginx-ingress -f helm-nginx-ingress-config.yaml
+helm install stable/nginx-ingress --namespace kube-system --name nginx-ingress -f helm/nginx-ingress-config.yaml
 ```
 
-### Install the dashboard
+Open https://dummy.kops.example.com and it should show `default backend - 404`.
 
 Install the dashboard.
 
 ```sh
-helm install stable/kubernetes-dashboard --namespace kube-system --name kubernetes-dashboard
+helm install stable/kubernetes-dashboard --namespace kube-system --name kubernetes-dashboard -f helm/kubernetes-dashboard-config.yaml
 kubectl proxy
 ```
 

@@ -3,4 +3,5 @@ controller:
     type: NodePort
     nodePorts:
       http: 30080
-
+rbac:
+  create: true
