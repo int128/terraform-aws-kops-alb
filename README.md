@@ -4,7 +4,7 @@ This is a Kubernetes starter with kops and Terraform to build the following stac
 
 ![k8s-alb-kops-terraform.png](k8s-alb-kops-terraform.png)
 
-Goals:
+## Goals
 
 - You can operate the cluster by `kops`
 - You can access to the Kunernetes API by `kubectl`
@@ -68,13 +68,13 @@ kops create cluster \
   --name ${TF_VAR_kops_cluster_name} \
   --zones ${AWS_DEFAULT_REGION}a \
   --authorization RBAC \
-  --master-size t2.micro \
-  --master-volume-size 20 \
-  --node-size t2.micro \
-  --node-volume-size 20 \
   --ssh-public-key=.sshkey.pub
-  #--ssh-access=x.x.x.x/x
-  #--admin-access=x.x.x.x/x
+  #--ssh-access=x.x.x.x/x \
+  #--admin-access=x.x.x.x/x \
+  #--master-size t2.micro \
+  #--master-volume-size 20 \
+  #--node-size t2.micro \
+  #--node-volume-size 20 \
 kops update cluster $TF_VAR_kops_cluster_name --yes
 kops validate cluster
 kubectl get nodes
@@ -130,20 +130,10 @@ Open http://localhost:8001/api/v1/namespaces/kube-system/services/kubernetes-das
 Create a deployment, service and ingress.
 
 ```sh
-kubectl apply -f echoserver
+kubectl apply -f echoserver.yaml
 ```
 
 Open https://echoserver.kops.example.com.
-
-### Deploy Jenkins
-
-Create a deployment, service, persistent volume claim (EBS) and ingress.
-
-```sh
-kubectl apply -f jenkins
-```
-
-Open https://jenkins.kops.example.com.
 
 ## Cleanup
 
