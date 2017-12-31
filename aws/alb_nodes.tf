@@ -3,7 +3,7 @@ resource "aws_lb" "nodes_alb" {
   load_balancer_type = "application"
   internal = false
   idle_timeout = 180
-  subnets = ["${data.aws_subnet_ids.kops_vpc_subnets.ids}"]
+  subnets = ["${data.aws_subnet_ids.kops_subnets.ids}"]
   security_groups = [
     "${aws_security_group.nodes_alb.id}",
     "${data.aws_security_group.nodes.id}"
@@ -26,16 +26,4 @@ resource "aws_security_group" "nodes_alb" {
     Name = "alb.nodes.${var.kops_cluster_name}"
     KubernetesCluster = "${var.kops_cluster_name}"
   }
-}
-
-# Security Group for Kubernetes nodes
-data "aws_security_group" "nodes" {
-  tags {
-    Name = "nodes.${var.kops_cluster_name}"
-    KubernetesCluster = "${var.kops_cluster_name}"
-  }
-}
-
-data "aws_subnet_ids" "kops_vpc_subnets" {
-  vpc_id = "${data.aws_vpc.kops_vpc.id}"
 }

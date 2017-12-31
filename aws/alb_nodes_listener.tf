@@ -10,11 +10,6 @@ resource "aws_lb_listener" "nodes" {
   }
 }
 
-# Certificate for the wildcard domain
-data "aws_acm_certificate" "nodes_alb" {
-  domain = "*.${var.kops_cluster_name}"
-}
-
 resource "aws_lb_target_group" "nodes" {
   name = "nginx-ingress-${local.kops_cluster_name_safe}"
   port = 30080
@@ -30,15 +25,4 @@ resource "aws_lb_target_group" "nodes" {
 resource "aws_autoscaling_attachment" "nodes_alb" {
   autoscaling_group_name = "${join(",", data.aws_autoscaling_groups.nodes.names)}"
   alb_target_group_arn = "${aws_lb_target_group.nodes.arn}"
-}
-
-data "aws_autoscaling_groups" "nodes" {
-  filter {
-    name = "key"
-    values = ["Name"]
-  }
-  filter {
-    name = "value"
-    values = ["nodes.${var.kops_cluster_name}"]
-  }
 }

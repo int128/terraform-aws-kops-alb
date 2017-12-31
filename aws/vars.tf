@@ -14,9 +14,3 @@ locals {
   # ALB safe name of kops_cluster_name
   kops_cluster_name_safe = "${replace("${var.kops_cluster_name}", "/[._]/", "-")}"
 }
-
-data "aws_vpc" "kops_vpc" {
-  tags {
-    KubernetesCluster = "${var.kops_cluster_name}"
-  }
-}

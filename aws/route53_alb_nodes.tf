@@ -8,7 +8,3 @@ resource "aws_route53_record" "alb_nodes" {
     evaluate_target_health = false
   }
 }
-
-data "aws_route53_zone" "kops_zone" {
-  name = "${var.kops_cluster_name}."
-}
