@@ -71,10 +71,6 @@ kops create cluster \
   --ssh-public-key=.sshkey.pub
   #--ssh-access=x.x.x.x/x \
   #--admin-access=x.x.x.x/x \
-  #--master-size t2.micro \
-  #--master-volume-size 20 \
-  #--node-size t2.micro \
-  #--node-volume-size 20 \
 kops update cluster $TF_VAR_kops_cluster_name --yes
 kops validate cluster
 kubectl get nodes
@@ -135,9 +131,38 @@ kubectl apply -f echoserver.yaml
 
 Open https://echoserver.kops.example.com.
 
-## Cleanup
+### Cleanup
 
 ```sh
 terraform destroy
 kops delete cluster --name $TF_VAR_kops_cluster_name --yes
+```
+
+## Tips
+
+### Reduce cost for experimental use
+
+Use the minimum instance type and reduce root volume.
+
+```sh
+kops edit ig master-us-west-2a
+```
+
+```yaml
+spec:
+  machineType: t2.micro
+  rootVolumeSize: 20
+```
+
+Use spot instances and reduce root volume.
+
+```sh
+kops edit ig nodes
+```
+
+```yaml
+spec:
+  machineType: m3.medium
+  maxPrice: "0.05"
+  rootVolumeSize: 20
 ```
