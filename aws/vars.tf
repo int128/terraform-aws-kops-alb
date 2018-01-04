@@ -1,13 +1,19 @@
 terraform {
-  backend "s3" {}
+  backend "s3" {
+    #bucket = ""
+    #key = "terraform.tfstate"
+    #region = "us-west-2"
+  }
 }
 
 provider "aws" {
+  #region = "us-west-2"
 }
 
 variable "kops_cluster_name" {
   type = "string"
   description = "Kubernetes Cluster Name"
+  # default = "kops.example.com"
 }
 
 locals {

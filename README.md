@@ -140,6 +140,33 @@ kops delete cluster --name $TF_VAR_kops_cluster_name --yes
 
 ## Tips
 
+### Team development
+
+It is recommended that the cluster name, S3 bucket name and AWS region are described in [`aws/vars.tf`](aws/vars.tf) for team development.
+You can guide a team member as follows:
+
+Install following tools:
+
+```sh
+brew install kops
+brew install kubernetes-helm
+brew install terraform
+```
+
+Initialize the kubectl context.
+
+```sh
+kops update cluster --state=s3://kops.example.com
+kubectl get nodes
+```
+
+Initialize the Terraform.
+
+```sh
+cd aws
+terraform init
+```
+
 ### Reduce cost for experimental use
 
 Use the minimum instance type and reduce root volume.
