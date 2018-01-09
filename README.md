@@ -197,3 +197,17 @@ spec:
   subnets:
   - us-west-2a
 ```
+
+Use DNS instead of ELB.
+You have to manually maintain the A record for master.
+
+```sh
+kops edit cluster
+```
+
+```yaml
+spec:
+  api:
+    dns: {}
+  masterPublicName: api.hello.k8s.local.dev.example.com
+```
