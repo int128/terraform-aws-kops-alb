@@ -11,7 +11,7 @@ data "aws_subnet_ids" "kops_subnets" {
 }
 
 # Auto Scaling Group for the Kubernetes nodes
-data "aws_autoscaling_groups" "nodes" {
+data "aws_autoscaling_groups" "kops_nodes" {
   filter {
     name = "key"
     values = ["Name"]
@@ -23,19 +23,9 @@ data "aws_autoscaling_groups" "nodes" {
 }
 
 # Security Group for the Kubernetes nodes
-data "aws_security_group" "nodes" {
+data "aws_security_group" "kops_nodes" {
   tags {
     Name = "nodes.${var.kops_cluster_name}"
     KubernetesCluster = "${var.kops_cluster_name}"
   }
-}
-
-# Route53 Hosted Zone for the Kubernetes cluster
-data "aws_route53_zone" "kops_zone" {
-  name = "${var.kops_cluster_name}."
-}
-
-# Certificate for the wildcard domain
-data "aws_acm_certificate" "nodes_alb" {
-  domain = "*.${var.kops_cluster_name}"
 }

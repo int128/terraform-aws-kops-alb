@@ -18,8 +18,8 @@ You must have followings:
 
 - an AWS account
 - an IAM user with [these permissions](https://github.com/kubernetes/kops/blob/master/docs/aws.md)
-- [a Route53 hosted zone](https://github.com/kubernetes/kops/blob/master/docs/aws.md), e.g. `kops.example.com`
-- an ACM certificate for the wildcard domain of the hosted zone, e.g. `*.kops.example.com`
+- a Route53 hosted zone for the wildcard domain, e.g. `dev.example.com`
+- an ACM certificate for the wildcard domain, e.g. `*.dev.example.com`
 
 Install following tools:
 
@@ -36,19 +36,21 @@ Set the cluster information.
 
 ```sh
 # .env
-export TF_VAR_kops_cluster_name=kops.example.com
+export TF_VAR_kops_cluster_name=hello.k8s.local
+export TF_VAR_service_domain_name=dev.example.com
 export AWS_DEFAULT_REGION=us-west-2
+export KOPS_STATE_STORE=s3://state.$TF_VAR_kops_cluster_name
 ```
 
 Create a bucket for the kops state store and the Terraform state store.
 
 ```sh
 aws s3api create-bucket \
-  --bucket s3.$TF_VAR_kops_cluster_name \
+  --bucket state.$TF_VAR_kops_cluster_name \
   --region $AWS_DEFAULT_REGION \
   --create-bucket-configuration LocationConstraint=$AWS_DEFAULT_REGION
 aws s3api put-bucket-versioning \
-  --bucket s3.$TF_VAR_kops_cluster_name \
+  --bucket state.$TF_VAR_kops_cluster_name \
   --versioning-configuration Status=Enabled
 ```
 
@@ -63,14 +65,14 @@ ssh-keygen -f .sshkey
 Create a cluster.
 
 ```sh
-export KOPS_STATE_STORE=s3://s3.$TF_VAR_kops_cluster_name
 kops create cluster \
   --name ${TF_VAR_kops_cluster_name} \
-  --zones ${AWS_DEFAULT_REGION}a \
+  --zones ${AWS_DEFAULT_REGION}a,${AWS_DEFAULT_REGION}b,${AWS_DEFAULT_REGION}c \
   --authorization RBAC \
   --ssh-public-key=.sshkey.pub
   #--ssh-access=x.x.x.x/x \
   #--admin-access=x.x.x.x/x \
+kops update cluster $TF_VAR_kops_cluster_name
 kops update cluster $TF_VAR_kops_cluster_name --yes
 kops validate cluster
 kubectl get nodes
@@ -83,8 +85,8 @@ Initialize Terraform.
 ```sh
 cd ./aws
 terraform init \
-  -backend-config="bucket=s3.$TF_VAR_kops_cluster_name" \
-  -backend-config="key=$TF_VAR_kops_cluster_name.tfstate"
+  -backend-config="bucket=state.$TF_VAR_kops_cluster_name" \
+  -backend-config="key=terraform.tfstate"
 ```
 
 Create a load balancer and update the Route53 zone.
@@ -110,7 +112,7 @@ Install the ingress controller.
 helm install stable/nginx-ingress --namespace kube-system --name nginx-ingress -f helm/nginx-ingress-config.yaml
 ```
 
-Open https://dummy.kops.example.com and it should show `default backend - 404`.
+Open https://dummy.dev.example.com and it should show `default backend - 404`.
 
 Install the dashboard.
 
@@ -129,7 +131,7 @@ Create a deployment, service and ingress.
 kubectl apply -f echoserver.yaml
 ```
 
-Open https://echoserver.kops.example.com.
+Open https://echoserver.dev.example.com.
 
 ### Cleanup
 
@@ -156,7 +158,7 @@ brew install terraform
 Initialize the kubectl context.
 
 ```sh
-kops update cluster --state=s3://kops.example.com
+kops update cluster --state=s3://state.hello.k8s.local
 kubectl get nodes
 ```
 
@@ -181,7 +183,7 @@ spec:
   rootVolumeSize: 20
 ```
 
-Use spot instances and reduce root volume.
+Use spot instances, reduce root volume and specify the single AZ.
 
 ```sh
 kops edit ig nodes
@@ -190,6 +192,8 @@ kops edit ig nodes
 ```yaml
 spec:
   machineType: m3.medium
-  maxPrice: "0.05"
+  maxPrice: "0.02"
   rootVolumeSize: 20
+  subnets:
+  - us-west-2a
 ```
