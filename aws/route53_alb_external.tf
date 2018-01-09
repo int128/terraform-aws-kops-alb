@@ -1,4 +1,4 @@
-resource "aws_route53_record" "alb_nodes" {
+resource "aws_route53_record" "alb_external" {
   zone_id = "${data.aws_route53_zone.service.zone_id}"
   name = "*.${var.service_domain_name}"
   type = "A"
