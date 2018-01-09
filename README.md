@@ -158,7 +158,7 @@ brew install terraform
 Initialize the kubectl context.
 
 ```sh
-kops update cluster --state=s3://state.hello.k8s.local
+kops export kubecfg --state=s3://state.hello.k8s.local --name hello.k8s.local
 kubectl get nodes
 ```
 
