@@ -37,7 +37,7 @@ Set the cluster information.
 ```sh
 # .env
 export TF_VAR_kops_cluster_name=hello.k8s.local
-export TF_VAR_service_domain_name=dev.example.com
+export TF_VAR_alb_external_domain_name=dev.example.com
 export AWS_DEFAULT_REGION=us-west-2
 export KOPS_STATE_STORE=s3://state.$TF_VAR_kops_cluster_name
 ```

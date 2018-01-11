@@ -17,9 +17,7 @@ resource "aws_security_group" "alb_external" {
     from_port = 443
     to_port = 443
     protocol = "tcp"
-    cidr_blocks = [
-      "0.0.0.0/0"
-    ]
+    cidr_blocks = "${var.alb_external_allow_ip}"
   }
   egress {
     from_port = 0

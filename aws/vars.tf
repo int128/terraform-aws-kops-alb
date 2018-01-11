@@ -16,13 +16,21 @@ variable "kops_cluster_name" {
   # default = "example.k8s.local"
 }
 
-variable "service_domain_name" {
+variable "alb_external_domain_name" {
   type = "string"
-  description = "Domain Name for services"
+  description = "Domain Name for external ALB"
   # default = "dev.example.com"
 }
 
+variable "alb_external_allow_ip" {
+  type = "list"
+  description = "Allow IP addresses for external ALB"
+  default = [
+    "0.0.0.0/0",  # all
+  ]
+}
+
 locals {
-  # Hash of kops_cluster_name and service_domain_name
-  alb_name_hash = "${substr(sha256("${var.kops_cluster_name}/${var.service_domain_name}"), 0, 16)}"
+  # Hash of kops_cluster_name and alb_external_domain_name
+  alb_name_hash = "${substr(sha256("${var.kops_cluster_name}/${var.alb_external_domain_name}"), 0, 16)}"
 }
