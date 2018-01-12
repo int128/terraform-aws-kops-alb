@@ -70,8 +70,6 @@ kops create cluster \
   --zones ${AWS_DEFAULT_REGION}a,${AWS_DEFAULT_REGION}b,${AWS_DEFAULT_REGION}c \
   --authorization RBAC \
   --ssh-public-key=.sshkey.pub
-  #--ssh-access=x.x.x.x/x \
-  #--admin-access=x.x.x.x/x \
 kops update cluster $TF_VAR_kops_cluster_name
 kops update cluster $TF_VAR_kops_cluster_name --yes
 kops validate cluster
@@ -167,6 +165,37 @@ Initialize the Terraform.
 ```sh
 cd aws
 terraform init
+```
+
+### Restrict access
+
+You can restrict API and SSH access by editing the cluster spec.
+
+```sh
+kops edit cluster
+```
+
+```yaml
+spec:
+  kubernetesApiAccess:
+  - xxx.xxx.xxx.xxx/32
+  sshAccess:
+  - xxx.xxx.xxx.xxx/32
+```
+
+You can restrict access to services (the external ALB) by Terraform.
+Also you should enable the internal ALB to make nodes can access to services via the same domain.
+
+```yaml
+variable "alb_external_allow_ip" {
+  default = [
+    "xxx.xxx.xxx.xxx/32",
+  ]
+}
+
+variable "alb_internal_enabled" {
+  default = false
+}
 ```
 
 ### Reduce cost for experimental use

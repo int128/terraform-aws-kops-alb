@@ -30,6 +30,12 @@ variable "alb_external_allow_ip" {
   ]
 }
 
+variable "alb_internal_enabled" {
+  type = "string"
+  description = "Enable internal ALB (needed if external ALB is not open)"
+  default = false
+}
+
 locals {
   # Hash of kops_cluster_name and alb_external_domain_name
   alb_name_hash = "${substr(sha256("${var.kops_cluster_name}/${var.alb_external_domain_name}"), 0, 16)}"
