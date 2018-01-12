@@ -1,3 +1,7 @@
+# Internal ALB for services.
+# This is needed if the security group of the external ALB is not open,
+# because k8s nodes can not access to services via the external ALB.
+
 resource "aws_lb" "alb_internal" {
   count = "${var.alb_internal_enabled}"
   name = "alb-int-${local.alb_name_hash}"

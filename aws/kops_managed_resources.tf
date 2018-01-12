@@ -1,3 +1,5 @@
+# References to resources managed by kops.
+
 # VPC for the Kubernetes cluster
 data "aws_vpc" "kops_vpc" {
   tags {

@@ -1,3 +1,6 @@
+# Route53 DNS record for services.
+# This is needed if the security group of the external ALB is not open.
+
 resource "aws_route53_zone" "alb_internal" {
   count = "${var.alb_internal_enabled}"
   name = "${var.alb_external_domain_name}"

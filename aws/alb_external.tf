@@ -1,3 +1,5 @@
+# External ALB for services.
+
 resource "aws_lb" "alb_external" {
   name = "alb-ext-${local.alb_name_hash}"
   load_balancer_type = "application"
