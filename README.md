@@ -140,6 +140,10 @@ kops delete cluster --name $TF_VAR_kops_cluster_name --yes
 
 ## Tips
 
+### Working with managed services
+
+You can attach the security group `allow-from-nodes.hello.k8s.local` to managed services such as RDS.
+
 ### Team development
 
 It is recommended that the cluster name, S3 bucket name and AWS region are described in [`aws/vars.tf`](aws/vars.tf) for team development.
