@@ -81,7 +81,7 @@ kubectl get nodes
 Initialize Terraform.
 
 ```sh
-cd ./aws
+cd ./terraform
 terraform init \
   -backend-config="bucket=state.$TF_VAR_kops_cluster_name" \
   -backend-config="key=terraform.tfstate"
@@ -146,7 +146,7 @@ You can attach the security group `allow-from-nodes.hello.k8s.local` to managed 
 
 ### Team development
 
-It is recommended that the cluster name, S3 bucket name and AWS region are described in [`aws/vars.tf`](aws/vars.tf) for team development.
+It is recommended that the cluster name, S3 bucket name and AWS region are described in [`terraform/vars.tf`](terraform/vars.tf) for team development.
 You can guide a team member as follows:
 
 Install following tools:
@@ -167,7 +167,7 @@ kubectl get nodes
 Initialize the Terraform.
 
 ```sh
-cd aws
+cd terraform
 terraform init
 ```
 
