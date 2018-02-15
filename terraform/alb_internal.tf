@@ -17,6 +17,7 @@ resource "aws_lb" "alb_internal" {
 
 resource "aws_security_group" "alb_internal" {
   count = "${var.alb_internal_enabled}"
+  name = "alb.int.nodes.${var.kops_cluster_name}"
   description = "Security group for internal ALB"
   vpc_id = "${data.aws_vpc.kops_vpc.id}"
   ingress {
@@ -33,7 +34,6 @@ resource "aws_security_group" "alb_internal" {
     cidr_blocks = ["0.0.0.0/0"]
   }
   tags {
-    Name = "alb.int.nodes.${var.kops_cluster_name}"
     KubernetesCluster = "${var.kops_cluster_name}"
   }
 }

@@ -13,6 +13,7 @@ resource "aws_lb" "alb_external" {
 }
 
 resource "aws_security_group" "alb_external" {
+  name = "alb.ext.nodes.${var.kops_cluster_name}"
   description = "Security group for external ALB"
   vpc_id = "${data.aws_vpc.kops_vpc.id}"
   ingress {
@@ -28,7 +29,6 @@ resource "aws_security_group" "alb_external" {
     cidr_blocks = ["0.0.0.0/0"]
   }
   tags {
-    Name = "alb.ext.nodes.${var.kops_cluster_name}"
     KubernetesCluster = "${var.kops_cluster_name}"
   }
 }

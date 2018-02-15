@@ -1,6 +1,7 @@
 # Resources for managed services accessed from Kubernetes nodes.
 
 resource "aws_security_group" "allow_from_k8s_nodes" {
+  name = "allow-from-nodes.${var.kops_cluster_name}"
   description = "Security group for managed services accessed from k8s nodes"
   vpc_id = "${data.aws_vpc.kops_vpc.id}"
   ingress {
@@ -17,7 +18,6 @@ resource "aws_security_group" "allow_from_k8s_nodes" {
     cidr_blocks = ["0.0.0.0/0"]
   }
   tags {
-    Name = "allow-from-nodes.${var.kops_cluster_name}"
     KubernetesCluster = "${var.kops_cluster_name}"
   }
 }
