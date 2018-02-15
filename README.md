@@ -87,7 +87,7 @@ terraform init \
   -backend-config="key=terraform.tfstate"
 ```
 
-Create a load balancer and update the Route53 zone.
+Create a load balancer and update the Route53 hosted zone.
 
 ```sh
 terraform plan
@@ -96,7 +96,7 @@ terraform apply
 
 ### Install system services
 
-Initialize the helm.
+Initialize Helm.
 
 ```sh
 kubectl create -f helm/rbac-config.yaml
@@ -104,7 +104,7 @@ helm init --service-account tiller
 helm repo update
 ```
 
-Install the ingress controller.
+Install an ingress controller.
 
 ```sh
 helm install stable/nginx-ingress --namespace kube-system --name nginx-ingress -f helm/nginx-ingress-config.yaml
@@ -112,14 +112,14 @@ helm install stable/nginx-ingress --namespace kube-system --name nginx-ingress -
 
 Open https://dummy.dev.example.com and it should show `default backend - 404`.
 
-Install the dashboard.
+Install Kubernetes Dashboard.
 
 ```sh
 helm install stable/kubernetes-dashboard --namespace kube-system --name kubernetes-dashboard -f helm/kubernetes-dashboard-config.yaml
 kubectl proxy
 ```
 
-Open http://localhost:8001/api/v1/namespaces/kube-system/services/kubernetes-dashboard-kubernetes-dashboard/proxy/.
+Open http://localhost:8001/api/v1/namespaces/kube-system/services/kubernetes-dashboard/proxy/.
 
 ### Deploy echoserver
 
@@ -204,22 +204,31 @@ variable "alb_internal_enabled" {
 
 ### Reduce cost for experimental use
 
-Use the minimum instance type and reduce root volume.
+Since a gossip-based cluster needs an ELB for masters and it costs $18/month at least,
+create a DNS based cluster instead.
 
 ```sh
-kops edit ig master-us-west-2a
+# .env
+export TF_VAR_kops_cluster_name=dev.example.com
+```
+
+Master:
+
+```sh
+kops edit ig master-us-west-2a --name $TF_VAR_kops_cluster_name
 ```
 
 ```yaml
 spec:
   machineType: t2.micro
   rootVolumeSize: 20
+  rootVolumeType: standard
 ```
 
-Use spot instances, reduce root volume and specify the single AZ.
+Nodes:
 
 ```sh
-kops edit ig nodes
+kops edit ig nodes --name $TF_VAR_kops_cluster_name
 ```
 
 ```yaml
@@ -227,20 +236,7 @@ spec:
   machineType: m3.medium
   maxPrice: "0.02"
   rootVolumeSize: 20
+  rootVolumeType: standard
   subnets:
   - us-west-2a
-```
-
-Use DNS instead of ELB.
-You have to manually maintain the A record for master.
-
-```sh
-kops edit cluster
-```
-
-```yaml
-spec:
-  api:
-    dns: {}
-  masterPublicName: api.hello.k8s.local.dev.example.com
 ```
