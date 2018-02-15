@@ -112,6 +112,12 @@ helm install stable/nginx-ingress --namespace kube-system --name nginx-ingress -
 
 Open https://dummy.dev.example.com and it should show `default backend - 404`.
 
+Install Heapster.
+
+```sh
+helm install stable/heapster --namespace kube-system --name heapster -f helm/heapster-config.yaml
+```
+
 Install Kubernetes Dashboard.
 
 ```sh
