@@ -112,7 +112,7 @@ helm repo update
 Install an ingress controller.
 
 ```sh
-helm install stable/nginx-ingress --name nginx-ingress -f config/helm-nginx-ingress.yaml
+helm install stable/nginx-ingress --namespace system --name nginx-ingress -f config/helm-nginx-ingress.yaml
 ```
 
 Open https://dummy.dev.example.com and it should show `default backend - 404`.
@@ -150,7 +150,7 @@ Install Grafana.
 
 ```sh
 # Install Grafana
-helm install stable/grafana --name grafana -f config/helm-grafana.yaml
+helm install stable/grafana --namespace devops --name grafana -f config/helm-grafana.yaml
 ```
 
 Install [Kubernetes app](https://github.com/raintank/kubernetes-app).
