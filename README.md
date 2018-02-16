@@ -144,6 +144,45 @@ kubectl proxy
 
 Open http://localhost:8001/api/v1/namespaces/kube-system/services/kubernetes-dashboard/proxy/.
 
+### 6. Install Grafana
+
+Install Grafana.
+
+```sh
+# Install Grafana
+helm install stable/grafana --name grafana -f config/helm-grafana.yaml
+```
+
+Install [Kubernetes app](https://github.com/raintank/kubernetes-app).
+
+```sh
+# Install Kubernetes app and restart the Grafana
+kubectl get pods
+kubectl exec grafana-grafana-xxx grafana-cli plugins install raintank-kubernetes-app
+
+# Make a tunnel to the Grafana
+kubectl port-forward grafana-grafana-xxx 8002:3000
+```
+
+Open http://localhost:8002 and follow instructions on https://grafana.com/plugins/raintank-kubernetes-app.
+
+Add a new cluster with the following properties:
+
+- URL: `https://api.example.com`
+- Access: `proxy`
+- TLS Client Auth: yes
+- With CA Cert: yes
+
+Certificates can be found by the followings:
+
+```sh
+# TLS Client Auth
+grep client-certificate-data ~/.kube/config | cut -d: -f2 | base64 -D
+grep client-key-data ~/.kube/config | cut -d: -f2 | base64 -D
+# CA Cert
+grep certificate-authority-data ~/.kube/config | cut -d: -f2 | base64 -D
+```
+
 ### Cleanup
 
 ```sh

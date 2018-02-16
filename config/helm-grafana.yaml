@@ -1,0 +1,5 @@
+server:
+  ingress:
+    enabled: true
+    hosts:
+    - grafana.devops.hidetake.org
