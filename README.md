@@ -1,25 +1,32 @@
-# Kubernetes starter with kops and Terraform
+# Kubernetes starter on AWS with kops and Terraform
 
-This is a Kubernetes starter with kops and Terraform to build the following stack.
+This is a Kubernetes starter on AWS with kops and Terraform to build the following stack.
 
 ![k8s-alb-kops-terraform.png](k8s-alb-kops-terraform.png)
 
 ## Goals
 
-- You can operate the cluster by `kops`
-- You can access to the Kunernetes API by `kubectl`
-- You can access to services via a HTTPS wildcard domain
+- You can operate the Kunernetes cluster by `kubectl`.
+- You can access to services on the cluster through HTTPS.
+
+This tutorial introduces the followings:
+
+- Kubernetes
+- nginx-ingress-controller
+- Kubernetes dashboard
+- Heapster
 
 ## Getting Started
 
 ### Prerequisite
 
-You must have followings:
+You must have the followings:
 
+- a domain or subdomain
 - an AWS account
 - an IAM user with [these permissions](https://github.com/kubernetes/kops/blob/master/docs/aws.md)
-- a Route53 hosted zone for the wildcard domain, e.g. `dev.example.com`
-- an ACM certificate for the wildcard domain, e.g. `*.dev.example.com`
+- a Route53 hosted zone for the domain, e.g. `dev.example.com`
+- an ACM certificate for the wildcard name, e.g. `*.dev.example.com`
 
 Install following tools:
 
@@ -30,7 +37,7 @@ brew install awscli
 brew install terraform
 ```
 
-### Create a state store
+### 1. Create a state store
 
 Set the cluster information.
 
@@ -54,7 +61,7 @@ aws s3api put-bucket-versioning \
   --versioning-configuration Status=Enabled
 ```
 
-### Create a cluster
+### 2. Create a Kubernetes cluster
 
 Generate a key pair to connect to Kubernetes nodes.
 
@@ -76,7 +83,7 @@ kops validate cluster
 kubectl get nodes
 ```
 
-### Create a load balancer
+### 3. Create a load balancer and ingress controller
 
 Initialize Terraform.
 
@@ -94,12 +101,10 @@ terraform plan
 terraform apply
 ```
 
-### Install system services
-
 Initialize Helm.
 
 ```sh
-kubectl create -f helm/rbac-config.yaml
+kubectl create -f config/helm-rbac-config.yaml
 helm init --service-account tiller
 helm repo update
 ```
@@ -107,27 +112,12 @@ helm repo update
 Install an ingress controller.
 
 ```sh
-helm install stable/nginx-ingress --namespace kube-system --name nginx-ingress -f helm/nginx-ingress-config.yaml
+helm install stable/nginx-ingress --name nginx-ingress -f config/helm-nginx-ingress.yaml
 ```
 
 Open https://dummy.dev.example.com and it should show `default backend - 404`.
 
-Install Heapster.
-
-```sh
-helm install stable/heapster --namespace kube-system --name heapster -f helm/heapster-config.yaml
-```
-
-Install Kubernetes Dashboard.
-
-```sh
-helm install stable/kubernetes-dashboard --namespace kube-system --name kubernetes-dashboard -f helm/kubernetes-dashboard-config.yaml
-kubectl proxy
-```
-
-Open http://localhost:8001/api/v1/namespaces/kube-system/services/kubernetes-dashboard/proxy/.
-
-### Deploy echoserver
+### 4. Test an ingress with echoserver
 
 Create a deployment, service and ingress.
 
@@ -137,12 +127,32 @@ kubectl apply -f echoserver.yaml
 
 Open https://echoserver.dev.example.com.
 
+### 5. Install Kubernetes Dashboard
+
+Install Heapster.
+
+```sh
+helm install stable/heapster --namespace kube-system --name heapster -f config/helm-heapster.yaml
+```
+
+Install Kubernetes Dashboard.
+
+```sh
+helm install stable/kubernetes-dashboard --namespace kube-system --name kubernetes-dashboard -f config/helm-kubernetes-dashboard.yaml
+kubectl proxy
+```
+
+Open http://localhost:8001/api/v1/namespaces/kube-system/services/kubernetes-dashboard/proxy/.
+
 ### Cleanup
 
 ```sh
 terraform destroy
 kops delete cluster --name $TF_VAR_kops_cluster_name --yes
 ```
+
+WARNING: `kops delete cluster` command will delete all EBS volumes tagged.
+You should take a snapshot before doing that.
 
 ## Tips
 
@@ -208,7 +218,7 @@ variable "alb_internal_enabled" {
 }
 ```
 
-### Reduce cost for experimental use
+### Reduce cost for testing purpose
 
 Since a gossip-based cluster needs an ELB for masters and it costs $18/month at least,
 create a DNS based cluster instead.
