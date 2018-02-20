@@ -228,7 +228,7 @@ create a DNS based cluster instead.
 export TF_VAR_kops_cluster_name=dev.example.com
 ```
 
-Master:
+#### Instance and volume for master
 
 ```sh
 kops edit ig master-us-west-2a --name $TF_VAR_kops_cluster_name
@@ -241,7 +241,7 @@ spec:
   rootVolumeType: standard
 ```
 
-Nodes:
+#### Instance and volume for nodes
 
 ```sh
 kops edit ig nodes --name $TF_VAR_kops_cluster_name
@@ -256,3 +256,8 @@ spec:
   subnets:
   - us-west-2a
 ```
+
+## Contribution
+
+This is an open source software licensed under Apache License 2.0.
+Feel free to bring up issues or pull requests.
