@@ -77,6 +77,11 @@ kops create cluster \
   --zones ${AWS_DEFAULT_REGION}a,${AWS_DEFAULT_REGION}b,${AWS_DEFAULT_REGION}c \
   --authorization RBAC \
   --ssh-public-key=.sshkey.pub
+
+kops edit cluster --name $TF_VAR_kops_cluster_name
+kops edit ig master-${AWS_DEFAULT_REGION}a --name $TF_VAR_kops_cluster_name
+kops edit ig nodes --name $TF_VAR_kops_cluster_name
+
 kops update cluster $TF_VAR_kops_cluster_name
 kops update cluster $TF_VAR_kops_cluster_name --yes
 kops validate cluster
@@ -104,8 +109,9 @@ terraform apply
 Initialize Helm.
 
 ```sh
-kubectl create -f config/helm-rbac-config.yaml
+kubectl create -f config/helm-rbac.yaml
 helm init --service-account tiller
+helm version
 helm repo update
 ```
 
@@ -220,15 +226,54 @@ variable "alb_internal_enabled" {
 
 ### Reduce cost for testing purpose
 
-Since a gossip-based cluster needs an ELB for masters and it costs $18/month at least,
-create a DNS based cluster instead.
+Warning: The following configuration is only for testing. Do not use for production.
+
+- Master
+  - EC2 (t2.micro instance) -> $0/month
+  - Root EBS (standard 10GB) -> $0.5/month
+  - etcd EBS (stdandrd 10GB x2) -> $1/month
+- Node
+  - EC2 (m3.medium spot instance) -> $5/month (price may change)
+  - Root EBS (standard 20GB) -> $1/month
+- Cluster
+  - Persistent Volumes EBS (gp2 ~30GB) -> $0/month
+  - Ingress ALB -> $0/month
+  - Route53 Hosted Zone -> $0.5/month
+
+If a single master and 2 nodes are running, they cost $14 per a month.
+
+Since a gossip-based cluster needs an ELB for masters, create a DNS based cluster instead.
 
 ```sh
 # .env
 export TF_VAR_kops_cluster_name=dev.example.com
 ```
 
-#### Instance and volume for master
+Configure the cluster:
+
+```sh
+kops edit cluster --name $TF_VAR_kops_cluster_name
+```
+
+```yaml
+  etcdClusters:
+  - etcdMembers:
+    - instanceGroup: master-us-west-2a
+      name: a
+      volumeSize: 10
+      volumeType: standard
+    name: main
+    version: 3.2.14
+  - etcdMembers:
+    - instanceGroup: master-us-west-2a
+      name: a
+      volumeSize: 10
+      volumeType: standard
+    name: events
+    version: 3.2.14
+```
+
+Configure the master:
 
 ```sh
 kops edit ig master-us-west-2a --name $TF_VAR_kops_cluster_name
@@ -237,11 +282,11 @@ kops edit ig master-us-west-2a --name $TF_VAR_kops_cluster_name
 ```yaml
 spec:
   machineType: t2.micro
-  rootVolumeSize: 20
+  rootVolumeSize: 10
   rootVolumeType: standard
 ```
 
-#### Instance and volume for nodes
+Configure the nodes:
 
 ```sh
 kops edit ig nodes --name $TF_VAR_kops_cluster_name
