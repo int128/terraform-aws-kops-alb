@@ -1,7 +1,19 @@
+# https://github.com/kubernetes/ingress-nginx
+
+rbac:
+  create: true
+
 controller:
   service:
     type: NodePort
     nodePorts:
       http: 30080
-rbac:
-  create: true
+  stats:
+    enabled: true
+
+  # https://github.com/kubernetes/ingress-nginx/blob/master/docs/user-guide/configmap.md
+  config:
+    proxy-read-timeout: "180"
+    proxy-send-timeout: "180"
+    proxy-body-size: "512m"
+    server-tokens: "false"

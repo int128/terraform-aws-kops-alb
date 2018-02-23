@@ -118,7 +118,7 @@ helm repo update
 Install an ingress controller.
 
 ```sh
-helm install stable/nginx-ingress --namespace system --name nginx-ingress -f config/helm-nginx-ingress.yaml
+helm install stable/nginx-ingress --namespace kube-system --name nginx-ingress -f config/helm-nginx-ingress.yaml
 ```
 
 Open https://dummy.dev.example.com and it should show `default backend - 404`.
