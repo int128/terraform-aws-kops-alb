@@ -144,11 +144,11 @@ helm install stable/heapster --namespace kube-system --name heapster -f config/h
 Install Kubernetes Dashboard.
 
 ```sh
-helm install stable/kubernetes-dashboard --namespace kube-system --name kubernetes-dashboard -f config/helm-kubernetes-dashboard.yaml
+helm install stable/kubernetes-dashboard --namespace kube-system --name kubernetes-dashboard
 kubectl proxy
 ```
 
-Open http://localhost:8001/api/v1/namespaces/kube-system/services/kubernetes-dashboard/proxy/.
+Open http://localhost:8001/api/v1/namespaces/kube-system/services/https:kubernetes-dashboard:/proxy/.
 
 ### Cleanup
 
