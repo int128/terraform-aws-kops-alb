@@ -19,4 +19,5 @@ controller:
     proxy-buffer-size: "64k"
     # Large request body (e.g. file upload)
     proxy-body-size: "512m"
+    proxy-buffer-size: "64k"
     server-tokens: "false"
