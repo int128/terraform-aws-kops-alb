@@ -21,11 +21,14 @@ resource "aws_security_group" "alb_internal" {
   description = "Security group for internal ALB"
   vpc_id = "${data.aws_vpc.kops_vpc.id}"
   ingress {
-    description = "Allow from Kubernetes nodes"
+    description = "Allow from Kubernetes masters and nodes"
     from_port = 0
     to_port = 0
     protocol = "-1"
-    security_groups = ["${data.aws_security_group.kops_nodes.id}"]
+    security_groups = [
+      "${data.aws_security_group.kops_masters.id}",
+      "${data.aws_security_group.kops_nodes.id}"
+    ]
   }
   egress {
     from_port = 0

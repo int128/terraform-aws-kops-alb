@@ -24,6 +24,14 @@ data "aws_autoscaling_groups" "kops_nodes" {
   }
 }
 
+# Security Group for the Kubernetes masters
+data "aws_security_group" "kops_masters" {
+  tags {
+    Name = "masters.${var.kops_cluster_name}"
+    KubernetesCluster = "${var.kops_cluster_name}"
+  }
+}
+
 # Security Group for the Kubernetes nodes
 data "aws_security_group" "kops_nodes" {
   tags {
