@@ -9,13 +9,6 @@ This is a Kubernetes starter on AWS with kops and Terraform to build the followi
 - You can operate the Kunernetes cluster by `kubectl`.
 - You can access to services on the cluster through HTTPS.
 
-This tutorial introduces the followings:
-
-- Kubernetes
-- nginx-ingress-controller
-- Kubernetes dashboard
-- Heapster
-
 ## Getting Started
 
 ### Prerequisite
@@ -28,26 +21,26 @@ You must have the followings:
 - a Route53 hosted zone for the domain, e.g. `dev.example.com`
 - an ACM certificate for the wildcard name, e.g. `*.dev.example.com`
 
-Install following tools:
+Install the following tools:
 
 ```sh
 brew install kops
 brew install kubernetes-helm
 brew install awscli
 brew install terraform
+curl -L -o ~/bin/helmfile https://github.com/roboll/helmfile/releases/download/v0.11/helmfile_darwin_amd64
 ```
-
-### 1. Create a state store
 
 Set the cluster information.
 
 ```sh
-# .env
 export TF_VAR_kops_cluster_name=hello.k8s.local
 export TF_VAR_alb_external_domain_name=dev.example.com
 export AWS_DEFAULT_REGION=us-west-2
 export KOPS_STATE_STORE=s3://state.$TF_VAR_kops_cluster_name
 ```
+
+### 1. Create a state store
 
 Create a bucket for the kops state store and the Terraform state store.
 
@@ -88,7 +81,7 @@ kops validate cluster
 kubectl get nodes
 ```
 
-### 3. Create a load balancer and ingress controller
+### 3. Create a load balancer
 
 Initialize Terraform.
 
@@ -106,7 +99,9 @@ terraform plan
 terraform apply
 ```
 
-Initialize Helm.
+### 4. Install components
+
+Initialize Helm:
 
 ```sh
 kubectl create -f config/helm-rbac.yaml
@@ -115,42 +110,26 @@ helm version
 helm repo update
 ```
 
-Install an ingress controller.
+Install the following components:
+
+- nginx-ingress
+- Heapster
+- Kubernetes Dashboard
+
+by
 
 ```sh
-helm install stable/nginx-ingress --namespace kube-system --name nginx-ingress -f config/helm-nginx-ingress.yaml
+helmfile sync
 ```
 
-Open https://dummy.dev.example.com and it should show `default backend - 404`.
-
-### 4. Test an ingress with echoserver
-
-Create a deployment, service and ingress.
+Test the ingress controller:
 
 ```sh
 kubectl apply -f config/echoserver.yaml
+curl -v https://echoserver.$TF_VAR_alb_external_domain_name
 ```
 
-Open https://echoserver.dev.example.com.
-
-### 5. Install Kubernetes Dashboard
-
-Install Heapster.
-
-```sh
-helm install stable/heapster --namespace kube-system --name heapster -f config/helm-heapster.yaml
-```
-
-Install Kubernetes Dashboard.
-
-```sh
-helm install stable/kubernetes-dashboard --namespace kube-system --name kubernetes-dashboard
-kubectl proxy
-```
-
-Open http://localhost:8001/api/v1/namespaces/kube-system/services/https:kubernetes-dashboard:/proxy/.
-
-### Cleanup
+## How to destroy
 
 ```sh
 terraform destroy
@@ -158,7 +137,7 @@ kops delete cluster --name $TF_VAR_kops_cluster_name --yes
 ```
 
 WARNING: `kops delete cluster` command will delete all EBS volumes tagged.
-You should take a snapshot before doing that.
+You should take snapshots before destroying.
 
 ## Tips
 
