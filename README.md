@@ -6,7 +6,7 @@ This is a Kubernetes starter on AWS with kops and Terraform to build the followi
 
 ## Goals
 
-- You can operate the Kunernetes cluster by `kubectl`.
+- You can manage the Kunernetes cluster using `kubectl`.
 - You can access to services on the cluster through HTTPS.
 
 ## Getting Started
@@ -28,7 +28,7 @@ brew install kops
 brew install kubernetes-helm
 brew install awscli
 brew install terraform
-curl -L -o ~/bin/helmfile https://github.com/roboll/helmfile/releases/download/v0.11/helmfile_darwin_amd64
+curl -L -o ~/bin/helmfile https://github.com/roboll/helmfile/releases/download/v0.11/helmfile_darwin_amd64 && chmod +x ~/bin/helmfile
 ```
 
 Set the cluster information.
@@ -37,7 +37,8 @@ Set the cluster information.
 export TF_VAR_kops_cluster_name=hello.k8s.local
 export TF_VAR_alb_external_domain_name=dev.example.com
 export AWS_DEFAULT_REGION=us-west-2
-export KOPS_STATE_STORE=s3://state.$TF_VAR_kops_cluster_name
+export KOPS_STATE_STORE_BUCKET=state.$TF_VAR_kops_cluster_name
+export KOPS_STATE_STORE=s3://$KOPS_STATE_STORE_BUCKET
 ```
 
 ### 1. Create a state store
@@ -46,17 +47,17 @@ Create a bucket for the kops state store and the Terraform state store.
 
 ```sh
 aws s3api create-bucket \
-  --bucket state.$TF_VAR_kops_cluster_name \
+  --bucket $KOPS_STATE_STORE_BUCKET \
   --region $AWS_DEFAULT_REGION \
   --create-bucket-configuration LocationConstraint=$AWS_DEFAULT_REGION
 aws s3api put-bucket-versioning \
-  --bucket state.$TF_VAR_kops_cluster_name \
+  --bucket $KOPS_STATE_STORE_BUCKET \
   --versioning-configuration Status=Enabled
 ```
 
 ### 2. Create a Kubernetes cluster
 
-Generate a key pair to connect to Kubernetes nodes.
+Generate a key pair to connect to the EC2 instances.
 
 ```sh
 ssh-keygen -f .sshkey
@@ -65,20 +66,32 @@ ssh-keygen -f .sshkey
 Create a cluster.
 
 ```sh
+# Initialize
 kops create cluster \
   --name ${TF_VAR_kops_cluster_name} \
   --zones ${AWS_DEFAULT_REGION}a,${AWS_DEFAULT_REGION}b,${AWS_DEFAULT_REGION}c \
   --authorization RBAC \
   --ssh-public-key=.sshkey.pub
 
+# Configure the cluster
 kops edit cluster --name $TF_VAR_kops_cluster_name
 kops edit ig master-${AWS_DEFAULT_REGION}a --name $TF_VAR_kops_cluster_name
 kops edit ig nodes --name $TF_VAR_kops_cluster_name
 
+# Render the cluster
 kops update cluster $TF_VAR_kops_cluster_name
 kops update cluster $TF_VAR_kops_cluster_name --yes
 kops validate cluster
 kubectl get nodes
+```
+
+If you want to create a single AZ cluster, specify a zone as follows:
+
+```yaml
+# kops edit ig nodes --name $TF_VAR_kops_cluster_name
+spec:
+  subnets:
+  - us-west-2a
 ```
 
 ### 3. Create a load balancer
@@ -88,14 +101,13 @@ Initialize Terraform.
 ```sh
 cd ./terraform
 terraform init \
-  -backend-config="bucket=state.$TF_VAR_kops_cluster_name" \
+  -backend-config="bucket=$KOPS_STATE_STORE_BUCKET" \
   -backend-config="key=terraform.tfstate"
 ```
 
 Create a load balancer and update the Route53 hosted zone.
 
 ```sh
-terraform plan
 terraform apply
 ```
 
@@ -145,33 +157,6 @@ You should take snapshots before destroying.
 
 You can attach the security group `allow-from-nodes.hello.k8s.local` to managed services such as RDS.
 
-### Team development
-
-It is recommended that the cluster name, S3 bucket name and AWS region are described in [`terraform/vars.tf`](terraform/vars.tf) for team development.
-You can guide a team member as follows:
-
-Install following tools:
-
-```sh
-brew install kops
-brew install kubernetes-helm
-brew install terraform
-```
-
-Initialize the kubectl context.
-
-```sh
-kops export kubecfg --state=s3://state.hello.k8s.local --name hello.k8s.local
-kubectl get nodes
-```
-
-Initialize the Terraform.
-
-```sh
-cd terraform
-terraform init
-```
-
 ### Restrict access
 
 You can restrict API and SSH access by editing the cluster spec.
@@ -189,7 +174,7 @@ spec:
 ```
 
 You can restrict access to services (the external ALB) by Terraform.
-Also you should enable the internal ALB to make nodes can access to services via the same domain.
+You should enable the internal ALB to make the nodes can access to services via the same domain.
 
 ```yaml
 variable "alb_external_allow_ip" {
@@ -199,7 +184,7 @@ variable "alb_external_allow_ip" {
 }
 
 variable "alb_internal_enabled" {
-  default = false
+  default = true
 }
 ```
 
@@ -219,22 +204,19 @@ Warning: The following configuration is only for testing. Do not use for product
   - Ingress ALB -> $0/month
   - Route53 Hosted Zone -> $0.5/month
 
-If a single master and 2 nodes are running, they cost $14 per a month.
+If 1 master and 2 nodes are running, they cost $14 per a month.
 
-Since a gossip-based cluster needs an ELB for masters, create a DNS based cluster instead.
+At first create a DNS based cluster because a gossip-based cluster requires an ELB for masters.
 
 ```sh
-# .env
 export TF_VAR_kops_cluster_name=dev.example.com
 ```
 
-Configure the cluster:
-
-```sh
-kops edit cluster --name $TF_VAR_kops_cluster_name
-```
+Configure the cluster as follows:
 
 ```yaml
+# kops edit cluster --name $TF_VAR_kops_cluster_name
+spec:
   etcdClusters:
   - etcdMembers:
     - instanceGroup: master-us-west-2a
@@ -252,26 +234,16 @@ kops edit cluster --name $TF_VAR_kops_cluster_name
     version: 3.2.14
 ```
 
-Configure the master:
-
-```sh
-kops edit ig master-us-west-2a --name $TF_VAR_kops_cluster_name
-```
-
 ```yaml
+# kops edit ig master-us-west-2a --name $TF_VAR_kops_cluster_name
 spec:
   machineType: t2.micro
   rootVolumeSize: 10
   rootVolumeType: standard
 ```
 
-Configure the nodes:
-
-```sh
-kops edit ig nodes --name $TF_VAR_kops_cluster_name
-```
-
 ```yaml
+# kops edit ig nodes --name $TF_VAR_kops_cluster_name
 spec:
   machineType: m3.medium
   maxPrice: "0.02"
