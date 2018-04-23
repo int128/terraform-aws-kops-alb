@@ -22,15 +22,10 @@ Make sure you have the following items:
 - a Route53 public hosted zone for the domain, e.g. `dev.example.com`
 - a certificate with the wildcard domain in ACM, e.g. `*.dev.example.com`
 
-Install the following tools:
+Install tools as follows:
 
 ```sh
-brew install awscli
-brew install kops
-brew install terraform
-brew install kubernetes-cli
-brew install kubernetes-helm
-curl -L -o ~/bin/helmfile https://github.com/roboll/helmfile/releases/download/v0.11/helmfile_darwin_amd64 && chmod +x ~/bin/helmfile
+./00-install.sh
 ```
 
 
