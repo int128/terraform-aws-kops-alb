@@ -31,21 +31,13 @@ Install tools as follows:
 
 ### 1. Prepare
 
-Create `env.sh` with the environment values.
+Change `01-env.sh` with your environment values.
 If you do not want to push the environment values to the repository, create `.env` instead.
-
-```sh
-export TF_VAR_kops_cluster_name=hello.k8s.local
-export TF_VAR_alb_external_domain_name=dev.example.com
-export AWS_DEFAULT_REGION=us-west-2
-export KOPS_STATE_STORE_BUCKET=state.$TF_VAR_kops_cluster_name
-export KOPS_STATE_STORE=s3://$KOPS_STATE_STORE_BUCKET
-```
 
 Load the environment values.
 
 ```sh
-source env.sh
+source ./01-env.sh
 ```
 
 Then create a S3 bucket for kops and Terraform.
