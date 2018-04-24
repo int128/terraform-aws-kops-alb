@@ -35,7 +35,7 @@ sudo apt install awscli
 ```
 
 
-### 1. Prepare environment
+### 1. Configure
 
 Change [`01-env.sh`](01-env.sh) with your environment values.
 If you do not want to push the environment values to the repository, create `.env` instead.
@@ -46,101 +46,91 @@ Load the environment values.
 source 01-env.sh
 ```
 
-Then create a S3 bucket for kops and Terraform.
+
+### 2. Bootstrap
+
+In this section, we will create the following components:
+
+- using kops
+  - A Kubernetes master in a single AZ
+  - A Kubernetes node in a single AZ
+- using Terraform
+  - An internet-facing ALB
+  - A Route53 record for the internet-facing ALB
+  - A security group for the internet-facing ALB
+- using Helm
+  - nginx-ingress
+  - Heapster
+  - Kubernetes Dashboard
+
+Run the following commands to bootstrap a cluster.
 
 ```sh
-aws s3api create-bucket \
-  --bucket $KOPS_STATE_STORE_BUCKET \
-  --region $AWS_DEFAULT_REGION \
-  --create-bucket-configuration LocationConstraint=$AWS_DEFAULT_REGION
-aws s3api put-bucket-versioning \
-  --bucket $KOPS_STATE_STORE_BUCKET \
-  --versioning-configuration Status=Enabled
+./02-bootstrap.sh
+```
+
+Instead you can run the commands in the script step-by-step.
+
+
+### 3. Customize
+
+To change the kops configuration:
+
+```sh
+# Load the environment values
+source 01-env.sh
+
+# Edit the cluster configuration
+kops edit cluster
+kops edit ig master-${AWS_DEFAULT_REGION}a
+kops edit ig nodes
+
+# Apply changes
+kops update cluster $TF_VAR_kops_cluster_name
+kops update cluster $TF_VAR_kops_cluster_name --yes
+```
+
+To change the Terraform configuration:
+
+```sh
+# Load the environment values
+source 01-env.sh
+
+# Apply changes
+terraform apply
 ```
 
 
-### 2. Run kops
+#### Recipe: Single AZ nodes
 
-In this section, we will create the following components using kops:
-
-- Kubernetes master(s)
-- Kubernetes node(s)
-
-Run the following commands:
+If you want to change to a single AZ nodes, fix subnets as follows:
 
 ```sh
-# Generate a key pair to connect to EC2 instances
-ssh-keygen -f .sshkey
-
-# Configure the cluster
-kops create cluster \
-  --name ${TF_VAR_kops_cluster_name} \
-  --zones ${AWS_DEFAULT_REGION}a,${AWS_DEFAULT_REGION}b,${AWS_DEFAULT_REGION}c \
-  --authorization RBAC \
-  --ssh-public-key=.sshkey.pub
-kops edit cluster --name $TF_VAR_kops_cluster_name
-kops edit ig master-${AWS_DEFAULT_REGION}a --name $TF_VAR_kops_cluster_name
 kops edit ig nodes --name $TF_VAR_kops_cluster_name
 ```
 
-If you want to create a single AZ cluster, specify a zone as follows:
-
 ```yaml
-# kops edit ig nodes --name $TF_VAR_kops_cluster_name
 spec:
   subnets:
   - us-west-2a
 ```
 
-Run the following commands:
 
-```sh
-# Create AWS resources
-kops update cluster $TF_VAR_kops_cluster_name
-kops update cluster $TF_VAR_kops_cluster_name --yes
-
-# Make sure you can access to the cluster
-kops validate cluster
-kubectl get nodes
-```
-
-
-#### Restrict IP addresses
+#### Recipe: Restrict IP addresses
 
 You can restrict API access and SSH access by changing the cluster spec.
 
+```sh
+kops edit cluster --name $TF_VAR_kops_cluster_name
+```
+
 ```yaml
-# kops edit cluster --name $TF_VAR_kops_cluster_name
 spec:
   kubernetesApiAccess:
   - xxx.xxx.xxx.xxx/32
   sshAccess:
   - xxx.xxx.xxx.xxx/32
 ```
-
-
-### 3. Run Terraform
-
-In this section, we will create the following AWS resources using Terraform:
-
-- An internet-facing ALB
-- A Route53 record for the internet-facing ALB
-- A security group for the internet-facing ALB
-
-Run the following commands:
-
-```sh
-# Initialize Terraform
-cd ./terraform
-terraform init \
-  -backend-config="bucket=$KOPS_STATE_STORE_BUCKET" \
-  -backend-config="key=terraform.tfstate"
-
-# Create AWS resources
-terraform apply
-```
-
-#### Restrict IP addresses
 
 You can restrict access to the internet-facing ALB by changing the following in `vars.tf`.
 
@@ -165,62 +155,7 @@ The additional resources will be created in order to allow the masters and nodes
 - A security group for the internal ALB
 
 
-### 4. Install Kubernetes components
-
-In this section, we will install the following components using Helm:
-
-- nginx-ingress
-- heapster
-- Kubernetes Dashboard
-
-Run the following commands:
-
-```sh
-# Initialize Helm
-kubectl create -f config/helm-rbac.yaml
-helm init --service-account tiller
-helm version
-
-# Install Helm charts
-helmfile sync
-
-# Test the ingress controller
-sed -i -e "s/TF_VAR_alb_external_domain_name/$TF_VAR_alb_external_domain_name" config/echoserver.yaml
-kubectl apply -f config/echoserver.yaml
-curl -v https://echoserver.$TF_VAR_alb_external_domain_name
-```
-
-
-## How to change configuration
-
-To change the kops configuration:
-
-```sh
-# Load the environment values
-source env.sh
-
-# Edit the cluster configuration
-kops edit cluster
-kops edit ig master-${AWS_DEFAULT_REGION}a
-kops edit ig nodes
-
-# Apply changes
-kops update cluster $TF_VAR_kops_cluster_name
-kops update cluster $TF_VAR_kops_cluster_name --yes
-```
-
-To change the Terraform configuration:
-
-```sh
-# Load the environment values
-source env.sh
-
-# Apply changes
-terraform apply
-```
-
-
-## How to destroy the cluster
+### 4. Destroy
 
 WARNING: `kops delete cluster` command will delete all EBS volumes tagged.
 You should take snapshots before destroying.
