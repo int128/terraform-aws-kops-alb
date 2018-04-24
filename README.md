@@ -22,19 +22,17 @@ Make sure you have the following items:
 - a Route53 public hosted zone for the domain, e.g. `dev.example.com`
 - a certificate with the wildcard domain in ACM, e.g. `*.dev.example.com`
 
-Run the following script:
+Install the following tools:
 
 ```sh
-./00-install.sh
+# macOS
+brew install awscli kubectl kops helm terraform
+./00-install.sh   # This will install helmfile
+
+# Windows Subsystem for Linux (WSL)
+sudo apt install awscli
+./00-install.sh   # This will install kubectl, kops, helm, terraform and helmfile
 ```
-
-to install the following tools into `.bin`:
-
-- `kubectl`
-- `kops`
-- `helm`
-- `helmfile`
-- `terraform`
 
 
 ### 1. Prepare environment
