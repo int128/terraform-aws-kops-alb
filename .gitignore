@@ -1,3 +1,7 @@
+# Binary
+/.bin
+
+# Environment specific
 /.env
 /.sshkey
 /.sshkey.pub

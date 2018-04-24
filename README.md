@@ -22,22 +22,30 @@ Make sure you have the following items:
 - a Route53 public hosted zone for the domain, e.g. `dev.example.com`
 - a certificate with the wildcard domain in ACM, e.g. `*.dev.example.com`
 
-Install tools as follows:
+Run the following script:
 
 ```sh
 ./00-install.sh
 ```
 
+to install the following tools into `.bin`:
 
-### 1. Prepare
+- `kubectl`
+- `kops`
+- `helm`
+- `helmfile`
+- `terraform`
 
-Change `01-env.sh` with your environment values.
+
+### 1. Prepare environment
+
+Change [`01-env.sh`](01-env.sh) with your environment values.
 If you do not want to push the environment values to the repository, create `.env` instead.
 
 Load the environment values.
 
 ```sh
-source ./01-env.sh
+source 01-env.sh
 ```
 
 Then create a S3 bucket for kops and Terraform.
@@ -75,14 +83,6 @@ kops create cluster \
 kops edit cluster --name $TF_VAR_kops_cluster_name
 kops edit ig master-${AWS_DEFAULT_REGION}a --name $TF_VAR_kops_cluster_name
 kops edit ig nodes --name $TF_VAR_kops_cluster_name
-
-# Create AWS resources
-kops update cluster $TF_VAR_kops_cluster_name
-kops update cluster $TF_VAR_kops_cluster_name --yes
-
-# Make sure you can access to the cluster
-kops validate cluster
-kubectl get nodes
 ```
 
 If you want to create a single AZ cluster, specify a zone as follows:
@@ -93,6 +93,19 @@ spec:
   subnets:
   - us-west-2a
 ```
+
+Run the following commands:
+
+```sh
+# Create AWS resources
+kops update cluster $TF_VAR_kops_cluster_name
+kops update cluster $TF_VAR_kops_cluster_name --yes
+
+# Make sure you can access to the cluster
+kops validate cluster
+kubectl get nodes
+```
+
 
 #### Restrict IP addresses
 
