@@ -6,9 +6,9 @@ This is a starter project with the following stack.
 
 ## Goals
 
-- Publish services on Kubernetes cluster.
-- You can manage the cluster using `kubectl` and `kops`.
-- You can manage the AWS resources using `terraform`.
+- Publish services via Ingress, ALB, ACM and Route53.
+- Manage the Kubernetes cluster using `kubectl` and `kops`.
+- Manage the AWS resources using `terraform`.
 
 ## Getting Started
 
@@ -38,13 +38,7 @@ sudo apt install awscli
 ### 1. Configure
 
 Change [`01-env.sh`](01-env.sh) with your environment values.
-If you do not want to push the environment values to the repository, create `.env` instead.
-
-Load the environment values.
-
-```sh
-source 01-env.sh
-```
+If you do not want to push the environment values to the Git repository, you can put your values into `.env` instead.
 
 
 ### 2. Bootstrap
@@ -62,6 +56,8 @@ In this section, we will create the following components:
   - nginx-ingress
   - Heapster
   - Kubernetes Dashboard
+- using kubectl
+  - echoserver for testing the Ingress Controller
 
 Run the following commands to bootstrap a cluster.
 
@@ -69,44 +65,24 @@ Run the following commands to bootstrap a cluster.
 ./02-bootstrap.sh
 ```
 
-Instead you can run the commands in the script step-by-step.
-
 
 ### 3. Customize
 
-To change the kops configuration:
+Load the environment values.
 
 ```sh
-# Load the environment values
 source 01-env.sh
-
-# Edit the cluster configuration
-kops edit cluster
-kops edit ig master-${AWS_DEFAULT_REGION}a
-kops edit ig nodes
-
-# Apply changes
-kops update cluster $TF_VAR_kops_cluster_name
-kops update cluster $TF_VAR_kops_cluster_name --yes
 ```
 
-To change the Terraform configuration:
-
-```sh
-# Load the environment values
-source 01-env.sh
-
-# Apply changes
-terraform apply
-```
+After that you can use `kops` and `terraform`.
 
 
 #### Recipe: Single AZ nodes
 
-If you want to change to a single AZ nodes, fix subnets as follows:
+You can change the nodes running in a single AZ by changing the instance group:
 
 ```sh
-kops edit ig nodes --name $TF_VAR_kops_cluster_name
+kops edit ig nodes
 ```
 
 ```yaml
@@ -115,13 +91,20 @@ spec:
   - us-west-2a
 ```
 
+Apply the change:
+
+```sh
+kops update cluster
+kops update cluster --yes
+```
+
 
 #### Recipe: Restrict IP addresses
 
-You can restrict API access and SSH access by changing the cluster spec.
+You can restrict API access and SSH access by changing the cluster spec:
 
 ```sh
-kops edit cluster --name $TF_VAR_kops_cluster_name
+kops edit cluster
 ```
 
 ```yaml
@@ -130,6 +113,16 @@ spec:
   - xxx.xxx.xxx.xxx/32
   sshAccess:
   - xxx.xxx.xxx.xxx/32
+```
+
+Apply the changes:
+
+```sh
+kops update cluster
+kops update cluster --yes
+
+kops rolling-update cluster
+kops rolling-update cluster --yes
 ```
 
 You can restrict access to the internet-facing ALB by changing the following in `vars.tf`.
@@ -147,6 +140,13 @@ variable "alb_internal_enabled" {
 }
 ```
 
+Apply the changes:
+
+```sh
+cd terraform
+terraform apply
+```
+
 The additional resources will be created in order to allow the masters and nodes have access to services.
 
 - An internal ALB
@@ -155,7 +155,28 @@ The additional resources will be created in order to allow the masters and nodes
 - A security group for the internal ALB
 
 
-### 4. Destroy
+### 4. Team operation
+
+Tell the following steps to your team members.
+
+#### First time configuration
+
+```sh
+./10-init.sh
+```
+
+#### Daily operation
+
+Load the environment values.
+
+```sh
+source 01-env.sh
+```
+
+After that you can use `kops` and `terraform`.
+
+
+### 5. Destroy
 
 WARNING: `kops delete cluster` command will delete all EBS volumes tagged.
 You should take snapshots before destroying.

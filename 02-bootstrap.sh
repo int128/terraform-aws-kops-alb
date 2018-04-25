@@ -1,8 +1,15 @@
 #!/bin/bash
+#
+# Bootstrap the Kubernetes cluster and AWS resources.
+# See README.
+#
 set -e
 set -o pipefail
 set -x
 cd "$(dirname "$0")"
+
+# Load the environment values
+source ./01-env.sh
 
 # Show versions
 aws --version
@@ -18,17 +25,16 @@ fi
 
 # Create a S3 bucket for kops and Terraform
 aws s3api create-bucket \
-  --bucket "$KOPS_STATE_STORE_BUCKET" \
+  --bucket "$KOPS_STATE_STORE_BUCKET_NAME" \
   --region "$AWS_DEFAULT_REGION" \
   --create-bucket-configuration "LocationConstraint=$AWS_DEFAULT_REGION"
 
 aws s3api put-bucket-versioning \
-  --bucket "$KOPS_STATE_STORE_BUCKET" \
+  --bucket "$KOPS_STATE_STORE_BUCKET_NAME" \
   --versioning-configuration "Status=Enabled"
 
 # Create a cluster configuration
 kops create cluster \
-  --name "$TF_VAR_kops_cluster_name" \
   --zones "$KOPS_CLUSTER_ZONES" \
   --authorization RBAC \
   --ssh-public-key .sshkey.pub \
@@ -37,17 +43,15 @@ kops create cluster \
   --master-size t2.medium
 
 # Create AWS resources
-kops update cluster $TF_VAR_kops_cluster_name
-kops update cluster $TF_VAR_kops_cluster_name --yes
+kops update cluster
+kops update cluster --yes
 
 # Make sure you can access to the cluster
 kops validate cluster
 
 # Initialize Terraform
 pushd terraform
-terraform init \
-  -backend-config="bucket=$KOPS_STATE_STORE_BUCKET" \
-  -backend-config="key=terraform.tfstate"
+terraform init -backend-config="bucket=$KOPS_STATE_STORE_BUCKET_NAME"
 
 # Create AWS resources
 terraform apply

@@ -1,7 +1,8 @@
 terraform {
   backend "s3" {
+    key = "terraform.tfstate"
+
     #bucket = ""
-    #key = "terraform.tfstate"
     #region = "us-west-2"
   }
 }
@@ -11,29 +12,32 @@ provider "aws" {
 }
 
 variable "kops_cluster_name" {
-  type = "string"
+  type        = "string"
   description = "Kubernetes Cluster Name"
-  # default = "example.k8s.local"
+
+  #default = "example.k8s.local"
 }
 
 variable "alb_external_domain_name" {
-  type = "string"
+  type        = "string"
   description = "Domain Name for external ALB"
-  # default = "dev.example.com"
+
+  #default = "dev.example.com"
 }
 
 variable "alb_external_allow_ip" {
-  type = "list"
+  type        = "list"
   description = "Allow IP addresses for external ALB"
+
   default = [
-    "0.0.0.0/0",  # all
+    "0.0.0.0/0", # all
   ]
 }
 
 variable "alb_internal_enabled" {
-  type = "string"
+  type        = "string"
   description = "Enable internal ALB (needed if external ALB is not open)"
-  default = false
+  default     = false
 }
 
 locals {
