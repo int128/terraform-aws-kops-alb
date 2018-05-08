@@ -66,5 +66,5 @@ helm version
 helmfile sync
 
 # Test the ingress controller
-sed -e "s/TF_VAR_alb_external_domain_name/$TF_VAR_alb_external_domain_name" config/echoserver.yaml | kubectl apply -f -
+sed -e "s/TF_VAR_alb_external_domain_name/$TF_VAR_alb_external_domain_name/" config/echoserver.yaml | kubectl apply -f -
 curl -v --retry 10 --retry-connrefused "https://echoserver.$TF_VAR_alb_external_domain_name"

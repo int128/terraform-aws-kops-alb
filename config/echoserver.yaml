@@ -1,7 +1,13 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: sandbox
+---
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
   name: echoserver
+  namespace: sandbox
 spec:
   replicas: 1
   template:
@@ -20,6 +26,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: echoserver
+  namespace: sandbox
 spec:
   type: ClusterIP
   ports:
@@ -33,6 +40,7 @@ apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
   name: echoserver
+  namespace: sandbox
 spec:
   rules:
   - host: echoserver.TF_VAR_alb_external_domain_name
