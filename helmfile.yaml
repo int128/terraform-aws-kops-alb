@@ -4,13 +4,3 @@ releases:
     chart: stable/nginx-ingress
     values:
       - config/helm-nginx-ingress.yaml
-
-  - name: heapster
-    namespace: kube-system
-    chart: stable/heapster
-    values:
-      - config/helm-heapster.yaml
-
-  - name: kubernetes-dashboard
-    namespace: kube-system
-    chart: stable/kubernetes-dashboard

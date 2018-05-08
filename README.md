@@ -52,12 +52,11 @@ In this section, we will create the following components:
   - An internet-facing ALB
   - A Route53 record for the internet-facing ALB
   - A security group for the internet-facing ALB
-- using Helm
-  - nginx-ingress
-  - Heapster
-  - Kubernetes Dashboard
 - using kubectl
-  - echoserver for testing the Ingress Controller
+  - `ServiceAccount` and `ClusterRoleBinding` for the Helm tiller
+  - `echoserver`
+- using Helm
+  - `nginx-ingress`
 
 Run the following commands to bootstrap a cluster.
 
