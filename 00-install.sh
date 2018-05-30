@@ -30,7 +30,7 @@ function main () {
 
   if need_to_install_command helmfile; then
     local helmfile_version="$(curl -sS https://api.github.com/repos/roboll/helmfile/releases/latest | jq -r .tag_name)"
-    install_from_binary helmfile "https://github.com/roboll/helmfile/releases/download/${helmfile_version}/helmfile_darwin_amd64"
+    install_from_binary helmfile "https://github.com/roboll/helmfile/releases/download/${helmfile_version}/helmfile_linux_amd64"
   fi
 
   if need_to_install_command terraform; then
