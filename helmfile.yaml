@@ -3,4 +3,22 @@ releases:
     namespace: kube-system
     chart: stable/nginx-ingress
     values:
-      - config/helm-nginx-ingress.yaml
+      # https://github.com/kubernetes/ingress-nginx
+      - rbac:
+          create: true
+        controller:
+          service:
+            type: NodePort
+            nodePorts:
+              http: 30080
+          stats:
+            enabled: true
+          # https://github.com/kubernetes/ingress-nginx/blob/master/docs/user-guide/configmap.md
+          config:
+            proxy-read-timeout: "180"
+            proxy-send-timeout: "180"
+            # Large request header (e.g. OIDC proxy)
+            proxy-buffer-size: "64k"
+            # Large request body (e.g. file upload)
+            proxy-body-size: "512m"
+            server-tokens: "false"
