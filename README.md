@@ -1,14 +1,14 @@
 # Kubernetes on AWS with kops and Terraform
 
-This is a starter project with the following stack.
+This bootstraps the following stack in a few minutes:
 
 ![aws-diagram.png](aws-diagram.png)
 
 ## Goals
 
-- Publish services via Ingress, ALB, ACM and Route53.
-- Manage the Kubernetes cluster using `kubectl` and `kops`.
-- Manage the AWS resources using `terraform`.
+- Publish your services via [nginx-ingress](https://github.com/kubernetes/charts/tree/master/stable/nginx-ingress), ALB, ACM and Route53.
+- Manage your Kubernetes cluster by `kubectl` and `kops`.
+- Manage your AWS resources by `terraform`.
 
 ## Getting Started
 
