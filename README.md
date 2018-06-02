@@ -9,6 +9,7 @@ This bootstraps the following stack in a few minutes:
 - Publish your services via [nginx-ingress](https://github.com/kubernetes/charts/tree/master/stable/nginx-ingress), ALB, ACM and Route53.
 - Manage your Kubernetes cluster by `kubectl` and `kops`.
 - Manage your AWS resources by `terraform`.
+- Manage your Helm releases by `helmfile`.
 
 ## Getting Started
 
@@ -100,7 +101,7 @@ kops update cluster --yes
 
 #### Recipe: Restrict IP addresses
 
-You can restrict API access and SSH access by changing the cluster spec:
+You can restrict API access and SSH access for specific IP addresses by changing the cluster spec:
 
 ```sh
 kops edit cluster
@@ -154,11 +155,17 @@ The additional resources will be created in order to allow the masters and nodes
 - A security group for the internal ALB
 
 
+#### Recipe: Working with managed services
+
+Terraform creates the security group `allow-from-nodes.hello.k8s.local` which allows access from the Kubernetes nodes.
+You can attach the security group to managed services such as RDS or Elasticsearch.
+
+
 ### 4. Team operation
 
 Tell the following steps to your team members.
 
-#### First time configuration
+#### On boarding
 
 ```sh
 ./10-init.sh
@@ -166,18 +173,18 @@ Tell the following steps to your team members.
 
 #### Daily operation
 
-Load the environment values.
-
 ```sh
 source 01-env.sh
+
+# Now you can execute the following tools.
+kops
+terraform
+helmfile
 ```
-
-After that you can use `kops` and `terraform`.
-
 
 ### 5. Destroy
 
-WARNING: `kops delete cluster` command will delete all EBS volumes tagged.
+**WARNING:** `kops delete cluster` command will delete all EBS volumes with a tag.
 You should take snapshots before destroying.
 
 ```sh
@@ -186,27 +193,24 @@ kops delete cluster --name $TF_VAR_kops_cluster_name --yes
 ```
 
 
-## Tips
+## Cost
 
-### Working with managed services
+Running cost depends on number of masters and nodes.
 
-You can attach the security group `allow-from-nodes.hello.k8s.local` to managed services such as RDS.
+Here is a minimum cost configuration with AWS Free Tier (first 1 year):
 
-### Cheap cluster for testing purpose
-
-WARNING: The following configuration is only for testing. Do not use for production.
-
-- Master
-  - EC2 (t2.micro instance) -> $0/month
-  - Root EBS (standard 10GB) -> $0.5/month
-  - etcd EBS (stdandrd 10GB x2) -> $1/month
-- Node
-  - EC2 (m3.medium spot instance) -> $5/month (price may change)
-  - Root EBS (standard 20GB) -> $1/month
-- Cluster
-  - Persistent Volumes EBS (gp2 ~30GB) -> $0/month
-  - Ingress ALB -> $0/month
-  - Route53 Hosted Zone -> $0.5/month
+Role | Kind | Spec | Monthly Cost
+-----|------|------|-------------
+Master  | EC2 | m3.medium spot | $5
+Master  | EBS | standard 10GB | $0.5
+Master  | EBS for etcd | standard 10GB x2 | $1
+Node    | EC2 | m3.medium spot | $5
+Node    | EBS | standard 20GB | $1
+Cluster | EBS for PVs | gp2 30GB | free
+Cluster | ALB | -              | free
+Cluster | Route53 Hosted Zone | - | $0.5
+Managed | RDS | t2.micro gp2 20GB | free
+Managed | Elasticsearch | t2.micro gp2 10GB | free
 
 If 1 master and 2 nodes are running, they cost $14 per a month.
 
