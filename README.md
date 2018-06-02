@@ -197,22 +197,21 @@ kops delete cluster --name $TF_VAR_kops_cluster_name --yes
 
 Running cost depends on number of masters and nodes.
 
-Here is a minimum cost configuration with AWS Free Tier (first 1 year):
+Here is a minimum configuration with AWS Free Tier (first 1 year):
 
 Role | Kind | Spec | Monthly Cost
 -----|------|------|-------------
 Master  | EC2 | m3.medium spot | $5
-Master  | EBS | standard 10GB | $0.5
-Master  | EBS for etcd | standard 10GB x2 | $1
+Master  | EBS | gp2 10GB | free
+Master  | EBS for etcd | gp2 5GB x2 | free
 Node    | EC2 | m3.medium spot | $5
-Node    | EBS | standard 20GB | $1
-Cluster | EBS for PVs | gp2 30GB | free
-Cluster | ALB | -              | free
+Node    | EBS | gp2 10GB | free
+Cluster | EBS for PVs | gp2 | $0.1/GB
+Cluster | ALB | - | free
 Cluster | Route53 Hosted Zone | - | $0.5
+Cluster | S3  | - | free
 Managed | RDS | t2.micro gp2 20GB | free
 Managed | Elasticsearch | t2.micro gp2 10GB | free
-
-If 1 master and 2 nodes are running, they cost $14 per a month.
 
 The cluster name must be a domain name in order to reduce an ELB for masters.
 
@@ -223,36 +222,33 @@ export TF_VAR_kops_cluster_name=dev.example.com
 Then change the volume type to `standard` and reduce size:
 
 ```yaml
-# kops edit cluster --name $TF_VAR_kops_cluster_name
+# kops edit cluster
 spec:
   etcdClusters:
   - etcdMembers:
     - instanceGroup: master-us-west-2a
       name: a
-      volumeSize: 10
-      volumeType: standard
+      volumeSize: 5
     name: main
     version: 3.2.14
   - etcdMembers:
     - instanceGroup: master-us-west-2a
       name: a
-      volumeSize: 10
-      volumeType: standard
+      volumeSize: 5
     name: events
     version: 3.2.14
 ---
-# kops edit ig master-us-west-2a --name $TF_VAR_kops_cluster_name
-spec:
-  machineType: t2.micro
-  rootVolumeSize: 10
-  rootVolumeType: standard
----
-# kops edit ig nodes --name $TF_VAR_kops_cluster_name
+# kops edit ig master-us-west-2a
 spec:
   machineType: m3.medium
   maxPrice: "0.02"
-  rootVolumeSize: 20
-  rootVolumeType: standard
+  rootVolumeSize: 10
+---
+# kops edit ig nodes
+spec:
+  machineType: m3.medium
+  maxPrice: "0.02"
+  rootVolumeSize: 10
   subnets:
   - us-west-2a
 ```
