@@ -11,73 +11,86 @@ This bootstraps the following stack in a few minutes:
 - Manage your AWS resources by `terraform`.
 - Manage your Helm releases by `helmfile`.
 
-## Getting Started
 
-### Prerequisite
+## Build a new cluster
 
 Make sure you have the following items:
 
-- an AWS account
-- an IAM user with [these permissions](https://github.com/kubernetes/kops/blob/master/docs/aws.md)
-- a domain or subdomain
-- a Route53 public hosted zone for the domain, e.g. `dev.example.com`
-- a certificate with the wildcard domain in ACM, e.g. `*.dev.example.com`
+- An AWS account
+- An IAM user with [these permissions](https://github.com/kubernetes/kops/blob/master/docs/aws.md)
+- A domain or subdomain, e.g. `dev.example.com`
 
 Install the following tools:
 
 ```sh
 # macOS
 brew install awscli kubectl kops helm terraform
-./00-install.sh   # This will install helmfile
+./00-install.sh   # Install helmfile
 
-# Windows Subsystem for Linux (WSL)
+# WSL/Ubuntu
 sudo apt install awscli
-./00-install.sh   # This will install kubectl, kops, helm, terraform and helmfile
+./00-install.sh   # Install kubectl, kops, helm, terraform and helmfile
 ```
 
 
-### 1. Configure
+### 1. Setup DNS and Certificate
+
+Open Route53 and create a public hosted zone for the domain, e.g. `dev.example.com`.
+You may need to add the NS record to the parent zone.
+
+Open ACM and request a certificate for the wildcard domain, e.g. `*.dev.example.com`.
+The certificate will be attached to an ALB later.
+
+
+### 2. Configure
+
+Configure your AWS credentials.
+
+```sh
+aws configure --profile example
+```
 
 Change [`01-env.sh`](01-env.sh) with your environment values.
 If you do not want to push the environment values to the Git repository, you can put your values into `.env` instead.
 
 
-### 2. Bootstrap
+### 3. Bootstrap
 
 In this section, we will create the following components:
 
-- using kops
+- kops
   - A Kubernetes master in a single AZ
   - A Kubernetes node in a single AZ
-- using Terraform
+- Terraform
   - An internet-facing ALB
   - A Route53 record for the internet-facing ALB
   - A security group for the internet-facing ALB
-- using kubectl
+- kubectl
   - `ServiceAccount` and `ClusterRoleBinding` for the Helm tiller
   - `echoserver`
-- using Helm
+- Helm
   - `nginx-ingress`
 
 Run the following commands to bootstrap a cluster.
 
 ```sh
+source 01-env.sh
 ./02-bootstrap.sh
 ```
 
 
-### 3. Customize
-
-Load the environment values.
+### 4. Customize
 
 ```sh
 source 01-env.sh
+
+# Now you can execute the following tools.
+kops
+terraform
+helmfile
 ```
 
-After that you can use `kops` and `terraform`.
-
-
-#### Recipe: Single AZ nodes
+#### 4-1. Single AZ nodes
 
 You can change the nodes running in a single AZ by changing the instance group:
 
@@ -99,9 +112,15 @@ kops update cluster --yes
 ```
 
 
-#### Recipe: Restrict IP addresses
+#### 4-2. Restrict access
 
-You can restrict API access and SSH access for specific IP addresses by changing the cluster spec:
+You can restrict the following accesses to specific IP addresses.
+
+- Kubernetes API
+- SSH
+- internet-facing ALB
+
+To change access control for the Kubernetes API and SSH:
 
 ```sh
 kops edit cluster
@@ -115,17 +134,14 @@ spec:
   - xxx.xxx.xxx.xxx/32
 ```
 
-Apply the changes:
+Apply the changes for the Kubernetes API and SSH:
 
 ```sh
 kops update cluster
 kops update cluster --yes
-
-kops rolling-update cluster
-kops rolling-update cluster --yes
 ```
 
-You can restrict access to the internet-facing ALB by changing the following in `vars.tf`.
+To change access control for the internet-facing ALB, edit `vars.tf`:
 
 ```tf
 variable "alb_external_allow_ip" {
@@ -140,14 +156,14 @@ variable "alb_internal_enabled" {
 }
 ```
 
-Apply the changes:
+Apply the changes for the internet-facing ALB:
 
 ```sh
 cd terraform
 terraform apply
 ```
 
-The additional resources will be created in order to allow the masters and nodes have access to services.
+The following resources are created so that the masters and nodes can access to services in the VPC.
 
 - An internal ALB
 - A Route53 private hosted zone for the internal ALB
@@ -155,23 +171,23 @@ The additional resources will be created in order to allow the masters and nodes
 - A security group for the internal ALB
 
 
-#### Recipe: Working with managed services
+#### 4-3. Working with managed services
 
 Terraform creates the security group `allow-from-nodes.hello.k8s.local` which allows access from the Kubernetes nodes.
 You can attach the security group to managed services such as RDS or Elasticsearch.
 
 
-### 4. Team operation
+## Manage the cluster
 
 Tell the following steps to your team members.
 
-#### On boarding
+### On boarding
 
 ```sh
 ./10-init.sh
 ```
 
-#### Daily operation
+### Daily operation
 
 ```sh
 source 01-env.sh
@@ -182,7 +198,8 @@ terraform
 helmfile
 ```
 
-### 5. Destroy
+
+## Destroy the cluster
 
 **WARNING:** `kops delete cluster` command will delete all EBS volumes with a tag.
 You should take snapshots before destroying.
@@ -196,6 +213,8 @@ kops delete cluster --name $TF_VAR_kops_cluster_name --yes
 ## Cost
 
 Running cost depends on number of masters and nodes.
+
+### Minimize cost for testing
 
 Here is a minimum configuration with AWS Free Tier (first 1 year):
 
@@ -216,10 +235,11 @@ Managed | Elasticsearch | t2.micro gp2 10GB | free
 The cluster name must be a domain name in order to reduce an ELB for masters.
 
 ```sh
-export TF_VAR_kops_cluster_name=dev.example.com
+# 01-env.sh
+kubernetes_cluster_name=dev.example.com
 ```
 
-Then change the volume type to `standard` and reduce size:
+Reduce size of the volumes:
 
 ```yaml
 # kops edit cluster
@@ -252,6 +272,7 @@ spec:
   subnets:
   - us-west-2a
 ```
+
 
 ## Contribution
 

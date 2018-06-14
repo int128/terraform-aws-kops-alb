@@ -1,25 +1,40 @@
-## env.sh: User specific enviroment values
+## Environment specific values.
 
-# Domain name for the external ALB
-export TF_VAR_alb_external_domain_name=dev.example.com
+# Domain name for the external ALB.
+kubernetes_ingress_domain=dev.example.com
 
-# Kubernetes cluster name
-export TF_VAR_kops_cluster_name=hello.k8s.local
+# Kubernetes cluster name.
+kubernetes_cluster_name=hello.j8s.local
 
-# Region
+# AWS Profile.
+export AWS_PROFILE=example
+
+# AWS Region.
 export AWS_DEFAULT_REGION=us-west-2
 
-# Availability Zones
-# Multiple zones are strongly recommended because RDS and ALB requires multiple zones.
-export KOPS_CLUSTER_ZONES="${AWS_DEFAULT_REGION}a,${AWS_DEFAULT_REGION}b,${AWS_DEFAULT_REGION}c"
+# AWS Availability Zones.
+# Note: RDS and ALB requires multiple zones.
+export KOPS_CLUSTER_ZONES="${AWS_DEFAULT_REGION}a,${AWS_DEFAULT_REGION}c"
 
-# Set kops default values
-export KOPS_STATE_STORE_BUCKET_NAME="state.$TF_VAR_kops_cluster_name"
+
+
+## Environment variables for tools.
+
+# kops
+export KOPS_STATE_STORE_BUCKET_NAME="state.$kubernetes_cluster_name"
 export KOPS_STATE_STORE="s3://$KOPS_STATE_STORE_BUCKET_NAME"
-export KOPS_CLUSTER_NAME="$TF_VAR_kops_cluster_name"
+export KOPS_CLUSTER_NAME="$kubernetes_cluster_name"
+
+# Terraform
+export TF_VAR_alb_external_domain_name="$kubernetes_ingress_domain"
+export TF_VAR_kops_cluster_name="$kubernetes_cluster_name"
 
 # Use binaries in .bin
-export PATH="$(cd $(dirname "$0") && pwd)/.bin:$PATH"
+export PATH="$(cd $(dirname -- "$0") && pwd)/.bin:$PATH"
+
+
 
 # Load environment values excluded from VCS
-[ -f .env ] && source .env
+if [ -f .env ]; then
+  source .env
+fi

@@ -3,13 +3,16 @@
 # Bootstrap the Kubernetes cluster and AWS resources.
 # See README.
 #
+if [ -z "$KOPS_CLUSTER_NAME" ]; then
+  echo "Run the following command before running $0"
+  echo '  source 01-env.sh'
+  exit 1
+fi
+
 set -e
 set -o pipefail
 set -x
 cd "$(dirname "$0")"
-
-# Load the environment values
-source ./01-env.sh
 
 # Show versions
 aws --version
@@ -20,7 +23,7 @@ helmfile -v
 
 # Generate a key pair to connect to EC2 instances
 if [ ! -f .sshkey ]; then
-  ssh-keygen -f .sshkey
+  ssh-keygen -f .sshkey -N ''
 fi
 
 # Create a S3 bucket for kops and Terraform
@@ -35,19 +38,20 @@ aws s3api put-bucket-versioning \
 
 # Create a cluster configuration
 kops create cluster \
+  --name "$KOPS_CLUSTER_NAME" \
   --zones "$KOPS_CLUSTER_ZONES" \
   --authorization RBAC \
   --ssh-public-key .sshkey.pub \
   --node-count 1 \
-  --node-size t2.medium \
+  --node-size m4.large \
   --master-size t2.medium
 
 # Create AWS resources
-kops update cluster
-kops update cluster --yes
+kops update cluster --name "$KOPS_CLUSTER_NAME"
+kops update cluster --name "$KOPS_CLUSTER_NAME" --yes
 
 # Make sure you can access to the cluster
-kops validate cluster
+kops validate cluster --name "$KOPS_CLUSTER_NAME"
 
 # Initialize Terraform
 pushd terraform
@@ -64,7 +68,3 @@ helm version
 
 # Install Helm charts
 helmfile sync
-
-# Test the ingress controller
-sed -e "s/TF_VAR_alb_external_domain_name/$TF_VAR_alb_external_domain_name/" echoserver.yaml | kubectl apply -f -
-curl -v --retry 10 --retry-connrefused "https://echoserver.$TF_VAR_alb_external_domain_name"
