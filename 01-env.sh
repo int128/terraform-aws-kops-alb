@@ -4,7 +4,7 @@
 kubernetes_ingress_domain=dev.example.com
 
 # Kubernetes cluster name.
-kubernetes_cluster_name=hello.j8s.local
+kubernetes_cluster_name=hello.k8s.local
 
 # Bucket name for state store of kops and Terraform.
 state_store_bucket_name="state.$kubernetes_cluster_name"
