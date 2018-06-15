@@ -1,4 +1,24 @@
-# References to resources managed by kops.
+## References to self/kops managed resources.
+
+data "aws_availability_zones" "available" {}
+
+##
+## SELF MANAGED RESOURCES
+##
+
+# Route53 Hosted Zone of the domain for services
+data "aws_route53_zone" "service" {
+  name = "${var.alb_external_domain_name}."
+}
+
+# Certificate of the domain for services
+data "aws_acm_certificate" "service" {
+  domain = "*.${var.alb_external_domain_name}"
+}
+
+##
+## KOPS MANAGED RESOURCES
+##
 
 # VPC for the Kubernetes cluster
 data "aws_vpc" "kops_vpc" {
@@ -15,11 +35,12 @@ data "aws_subnet_ids" "kops_subnets" {
 # Auto Scaling Group for the Kubernetes nodes
 data "aws_autoscaling_groups" "kops_nodes" {
   filter {
-    name = "key"
+    name   = "key"
     values = ["Name"]
   }
+
   filter {
-    name = "value"
+    name   = "value"
     values = ["nodes.${var.kops_cluster_name}"]
   }
 }
@@ -27,7 +48,7 @@ data "aws_autoscaling_groups" "kops_nodes" {
 # Security Group for the Kubernetes masters
 data "aws_security_group" "kops_masters" {
   tags {
-    Name = "masters.${var.kops_cluster_name}"
+    Name              = "masters.${var.kops_cluster_name}"
     KubernetesCluster = "${var.kops_cluster_name}"
   }
 }
@@ -35,7 +56,7 @@ data "aws_security_group" "kops_masters" {
 # Security Group for the Kubernetes nodes
 data "aws_security_group" "kops_nodes" {
   tags {
-    Name = "nodes.${var.kops_cluster_name}"
+    Name              = "nodes.${var.kops_cluster_name}"
     KubernetesCluster = "${var.kops_cluster_name}"
   }
 }

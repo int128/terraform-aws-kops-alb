@@ -2,7 +2,7 @@
 
 This bootstraps the following stack in a few minutes:
 
-![aws-diagram.png](aws-diagram.png)
+![aws-diagram.png](images/aws-diagram.png)
 
 ## Goals
 
@@ -159,7 +159,6 @@ variable "alb_internal_enabled" {
 Apply the changes for the internet-facing ALB:
 
 ```sh
-cd terraform
 terraform apply
 ```
 
@@ -184,6 +183,7 @@ Tell the following steps to your team members.
 ### On boarding
 
 ```sh
+source 01-env.sh
 ./10-init.sh
 ```
 
@@ -206,7 +206,7 @@ You should take snapshots before destroying.
 
 ```sh
 terraform destroy
-kops delete cluster --name $TF_VAR_kops_cluster_name --yes
+kops delete cluster --name "$KOPS_CLUSTER_NAME" --yes
 ```
 
 

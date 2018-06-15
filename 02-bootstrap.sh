@@ -54,12 +54,10 @@ kops update cluster --name "$KOPS_CLUSTER_NAME" --yes
 kops validate cluster --name "$KOPS_CLUSTER_NAME"
 
 # Initialize Terraform
-pushd terraform
 terraform init -backend-config="bucket=$KOPS_STATE_STORE_BUCKET_NAME"
 
 # Create AWS resources
 terraform apply
-popd
 
 # Initialize Helm
 kubectl create -f helm-service-account.yaml
