@@ -15,7 +15,6 @@ set -x
 cd "$(dirname "$0")"
 
 # Show versions
-aws --version
 kops version
 terraform version
 helm version -c
@@ -25,16 +24,6 @@ helmfile -v
 if [ ! -f .sshkey ]; then
   ssh-keygen -f .sshkey -N ''
 fi
-
-# Create a S3 bucket for kops and Terraform
-aws s3api create-bucket \
-  --bucket "$KOPS_STATE_STORE_BUCKET_NAME" \
-  --region "$AWS_DEFAULT_REGION" \
-  --create-bucket-configuration "LocationConstraint=$AWS_DEFAULT_REGION"
-
-aws s3api put-bucket-versioning \
-  --bucket "$KOPS_STATE_STORE_BUCKET_NAME" \
-  --versioning-configuration "Status=Enabled"
 
 # Create a cluster configuration
 kops create cluster \
@@ -54,7 +43,7 @@ kops update cluster --name "$KOPS_CLUSTER_NAME" --yes
 kops validate cluster --name "$KOPS_CLUSTER_NAME"
 
 # Initialize Terraform
-terraform init -backend-config="bucket=$KOPS_STATE_STORE_BUCKET_NAME"
+terraform init -backend-config="bucket=$TF_VAR_state_store_bucket_name"
 
 # Create AWS resources
 terraform apply

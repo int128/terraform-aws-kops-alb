@@ -9,12 +9,12 @@ resource "aws_lb" "alb_external" {
   security_groups    = ["${aws_security_group.alb_external.id}"]
 
   tags {
-    KubernetesCluster = "${var.kops_cluster_name}"
+    KubernetesCluster = "${var.kubernetes_cluster_name}"
   }
 }
 
 resource "aws_security_group" "alb_external" {
-  name        = "alb.ext.nodes.${var.kops_cluster_name}"
+  name        = "alb.ext.nodes.${var.kubernetes_cluster_name}"
   description = "Security group for external ALB"
   vpc_id      = "${data.aws_vpc.kops_vpc.id}"
 
@@ -33,7 +33,7 @@ resource "aws_security_group" "alb_external" {
   }
 
   tags {
-    KubernetesCluster = "${var.kops_cluster_name}"
+    KubernetesCluster = "${var.kubernetes_cluster_name}"
   }
 }
 
@@ -71,7 +71,7 @@ resource "aws_lb_target_group" "alb_external" {
   }
 
   tags {
-    KubernetesCluster = "${var.kops_cluster_name}"
+    KubernetesCluster = "${var.kubernetes_cluster_name}"
   }
 }
 

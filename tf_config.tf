@@ -11,14 +11,14 @@ provider "aws" {
   #region = "us-west-2"
 }
 
-variable "kops_cluster_name" {
+variable "kubernetes_cluster_name" {
   type        = "string"
   description = "Kubernetes Cluster Name"
 
   #default = "example.k8s.local"
 }
 
-variable "alb_external_domain_name" {
+variable "kubernetes_ingress_domain" {
   type        = "string"
   description = "Domain Name for external ALB"
 
@@ -41,6 +41,6 @@ variable "alb_internal_enabled" {
 }
 
 locals {
-  # Hash of kops_cluster_name and alb_external_domain_name
-  alb_name_hash = "${substr(sha256("${var.kops_cluster_name}/${var.alb_external_domain_name}"), 0, 16)}"
+  # Hash of kubernetes_cluster_name and kubernetes_ingress_domain
+  alb_name_hash = "${substr(sha256("${var.kubernetes_cluster_name}/${var.kubernetes_ingress_domain}"), 0, 16)}"
 }

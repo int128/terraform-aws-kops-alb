@@ -8,12 +8,12 @@ data "aws_availability_zones" "available" {}
 
 # Route53 Hosted Zone of the domain for services
 data "aws_route53_zone" "service" {
-  name = "${var.alb_external_domain_name}."
+  name = "${var.kubernetes_ingress_domain}."
 }
 
 # Certificate of the domain for services
 data "aws_acm_certificate" "service" {
-  domain = "*.${var.alb_external_domain_name}"
+  domain = "*.${var.kubernetes_ingress_domain}"
 }
 
 ##
@@ -23,7 +23,7 @@ data "aws_acm_certificate" "service" {
 # VPC for the Kubernetes cluster
 data "aws_vpc" "kops_vpc" {
   tags {
-    KubernetesCluster = "${var.kops_cluster_name}"
+    KubernetesCluster = "${var.kubernetes_cluster_name}"
   }
 }
 
@@ -41,22 +41,22 @@ data "aws_autoscaling_groups" "kops_nodes" {
 
   filter {
     name   = "value"
-    values = ["nodes.${var.kops_cluster_name}"]
+    values = ["nodes.${var.kubernetes_cluster_name}"]
   }
 }
 
 # Security Group for the Kubernetes masters
 data "aws_security_group" "kops_masters" {
   tags {
-    Name              = "masters.${var.kops_cluster_name}"
-    KubernetesCluster = "${var.kops_cluster_name}"
+    Name              = "masters.${var.kubernetes_cluster_name}"
+    KubernetesCluster = "${var.kubernetes_cluster_name}"
   }
 }
 
 # Security Group for the Kubernetes nodes
 data "aws_security_group" "kops_nodes" {
   tags {
-    Name              = "nodes.${var.kops_cluster_name}"
-    KubernetesCluster = "${var.kops_cluster_name}"
+    Name              = "nodes.${var.kubernetes_cluster_name}"
+    KubernetesCluster = "${var.kubernetes_cluster_name}"
   }
 }

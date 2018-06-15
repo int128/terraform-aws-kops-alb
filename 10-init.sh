@@ -15,7 +15,6 @@ set -x
 cd "$(dirname "$0")"
 
 # Show versions
-aws --version
 kops version
 terraform version
 helm version -c
@@ -26,7 +25,7 @@ kops export kubecfg
 kops validate cluster
 
 # Initialize Terraform
-terraform init -backend-config="bucket=$KOPS_STATE_STORE_BUCKET_NAME"
+terraform init -backend-config="bucket=$TF_VAR_state_store_bucket_name"
 
 # Initialize Helm
 helm init --client-only

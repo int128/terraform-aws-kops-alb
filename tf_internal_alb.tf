@@ -12,13 +12,13 @@ resource "aws_lb" "alb_internal" {
   security_groups    = ["${aws_security_group.alb_internal.id}"]
 
   tags {
-    KubernetesCluster = "${var.kops_cluster_name}"
+    KubernetesCluster = "${var.kubernetes_cluster_name}"
   }
 }
 
 resource "aws_security_group" "alb_internal" {
   count       = "${var.alb_internal_enabled}"
-  name        = "alb.int.nodes.${var.kops_cluster_name}"
+  name        = "alb.int.nodes.${var.kubernetes_cluster_name}"
   description = "Security group for internal ALB"
   vpc_id      = "${data.aws_vpc.kops_vpc.id}"
 
@@ -42,7 +42,7 @@ resource "aws_security_group" "alb_internal" {
   }
 
   tags {
-    KubernetesCluster = "${var.kops_cluster_name}"
+    KubernetesCluster = "${var.kubernetes_cluster_name}"
   }
 }
 
@@ -83,7 +83,7 @@ resource "aws_lb_target_group" "alb_internal" {
   }
 
   tags {
-    KubernetesCluster = "${var.kops_cluster_name}"
+    KubernetesCluster = "${var.kubernetes_cluster_name}"
   }
 }
 

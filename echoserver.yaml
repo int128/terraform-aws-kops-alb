@@ -43,7 +43,7 @@ metadata:
   namespace: echoserver
 spec:
   rules:
-  - host: echoserver.TF_VAR_alb_external_domain_name
+  - host: echoserver.kubernetes_ingress_domain
     http:
       paths:
       - path: /

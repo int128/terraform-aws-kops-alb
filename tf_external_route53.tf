@@ -2,7 +2,7 @@
 
 resource "aws_route53_record" "alb_external" {
   zone_id = "${data.aws_route53_zone.service.zone_id}"
-  name    = "*.${var.alb_external_domain_name}"
+  name    = "*.${var.kubernetes_ingress_domain}"
   type    = "A"
 
   alias {

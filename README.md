@@ -33,16 +33,7 @@ sudo apt install awscli
 ```
 
 
-### 1. Setup DNS and Certificate
-
-Open Route53 and create a public hosted zone for the domain, e.g. `dev.example.com`.
-You may need to add the NS record to the parent zone.
-
-Open ACM and request a certificate for the wildcard domain, e.g. `*.dev.example.com`.
-The certificate will be attached to an ALB later.
-
-
-### 2. Configure
+### 1. Configure
 
 Configure your AWS credentials.
 
@@ -52,6 +43,30 @@ aws configure --profile example
 
 Change [`01-env.sh`](01-env.sh) with your environment values.
 If you do not want to push the environment values to the Git repository, you can put your values into `.env` instead.
+
+
+### 2. Setup DNS, Certificate and S3
+
+**Route53:** Create a public hosted zone for the domain, e.g. `dev.example.com`.
+You may need to add the NS record to the parent zone.
+
+**ACM:** Request a certificate for the wildcard domain, e.g. `*.dev.example.com`.
+The certificate will be attached to an ALB later.
+
+**S3:** Create a bucket for state store of kops and Terraform.
+You must enable bucket versioning.
+You can do it from AWS CLI by the following:
+
+```sh
+source 01-env.sh
+aws s3api create-bucket \
+  --bucket "$state_store_bucket_name" \
+  --region "$AWS_DEFAULT_REGION" \
+  --create-bucket-configuration "LocationConstraint=$AWS_DEFAULT_REGION"
+aws s3api put-bucket-versioning \
+  --bucket "$state_store_bucket_name" \
+  --versioning-configuration "Status=Enabled"
+```
 
 
 ### 3. Bootstrap

@@ -2,18 +2,18 @@
 
 resource "aws_route53_zone" "alb_internal" {
   count  = "${var.alb_internal_enabled}"
-  name   = "${var.alb_external_domain_name}"
+  name   = "${var.kubernetes_ingress_domain}"
   vpc_id = "${data.aws_vpc.kops_vpc.id}"
 
   tags {
-    KubernetesCluster = "${var.kops_cluster_name}"
+    KubernetesCluster = "${var.kubernetes_cluster_name}"
   }
 }
 
 resource "aws_route53_record" "alb_internal" {
   count   = "${var.alb_internal_enabled}"
   zone_id = "${aws_route53_zone.alb_internal.zone_id}"
-  name    = "*.${var.alb_external_domain_name}"
+  name    = "*.${var.kubernetes_ingress_domain}"
   type    = "A"
 
   alias {
