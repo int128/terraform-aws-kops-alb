@@ -209,6 +209,11 @@ Tell the following steps to your team members.
 
 ```sh
 source 01-env.sh
+
+# Configure your AWS credentials.
+aws configure --profile "$AWS_PROFILE"
+
+# Initialize kubectl and Terraform.
 ./10-init.sh
 ```
 
