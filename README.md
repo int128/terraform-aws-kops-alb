@@ -35,30 +35,53 @@ sudo apt install awscli
 
 ### 1. Configure
 
-Configure your AWS credentials.
-
-```sh
-aws configure --profile example
-```
-
 Change [`01-env.sh`](01-env.sh) with your environment values.
 If you do not want to push the environment values to the Git repository, you can put your values into `.env` instead.
 
-
-### 2. Setup DNS, Certificate and S3
-
-**Route53:** Create a public hosted zone for the domain, e.g. `dev.example.com`.
-You may need to add the NS record to the parent zone.
-
-**ACM:** Request a certificate for the wildcard domain, e.g. `*.dev.example.com`.
-The certificate will be attached to an ALB later.
-
-**S3:** Create a bucket for state store of kops and Terraform.
-You must enable bucket versioning.
-You can do it from AWS CLI by the following:
+Then load the values.
 
 ```sh
 source 01-env.sh
+```
+
+Configure your AWS credentials.
+
+```sh
+aws configure --profile "$AWS_PROFILE"
+```
+
+
+### 2. Setup
+
+#### 2-1. Route53
+
+Create a public hosted zone for the domain:
+
+```sh
+aws route53 create-hosted-zone --name "$kubernetes_ingress_domain" --caller-reference "$(date)"
+```
+
+You may need to add the NS records to the parent zone.
+
+
+#### 2-2. ACM
+
+Request a certificate for the wildcard domain:
+
+```sh
+aws acm request-certificate --domain-name "*.$kubernetes_ingress_domain" --validation-method DNS
+```
+
+Open https://console.aws.amazon.com/acm/home and click the "Create record in Route53" button.
+See [AWS User Guide](https://docs.aws.amazon.com/acm/latest/userguide/gs-acm-validate-dns.html) for more.
+
+
+#### 2-3. S3
+
+Create a bucket for state store of kops and Terraform.
+You must enable bucket versioning.
+
+```sh
 aws s3api create-bucket \
   --bucket "$state_store_bucket_name" \
   --region "$AWS_DEFAULT_REGION" \
@@ -71,11 +94,11 @@ aws s3api put-bucket-versioning \
 
 ### 3. Bootstrap
 
-In this section, we will create the following components:
+By default the script will create the following components:
 
 - kops
-  - A Kubernetes master in a single AZ
-  - A Kubernetes node in a single AZ
+  - 1 master (t2.medium) in a single AZ
+  - 2 nodes (t2.medium) in a single AZ
 - Terraform
   - An internet-facing ALB
   - A Route53 record for the internet-facing ALB
@@ -86,40 +109,30 @@ In this section, we will create the following components:
 - Helm
   - `nginx-ingress`
 
-Run the following commands to bootstrap a cluster.
+Bootstrap a cluster.
 
 ```sh
-source 01-env.sh
 ./02-bootstrap.sh
 ```
 
 
 ### 4. Customize
 
-```sh
-source 01-env.sh
+#### 4-1. Change instance type
 
-# Now you can execute the following tools.
-kops
-terraform
-helmfile
-```
-
-#### 4-1. Single AZ nodes
-
-You can change the nodes running in a single AZ by changing the instance group:
+You can change instance type of the master:
 
 ```sh
-kops edit ig nodes
+kops edit ig "master-${AWS_DEFAULT_REGION}a"
 ```
 
-```yaml
-spec:
-  subnets:
-  - us-west-2a
+You can change instance type of the nodes:
+
+```sh
+kops edit ig "nodes-${AWS_DEFAULT_REGION}a"
 ```
 
-Apply the change:
+Apply the changes:
 
 ```sh
 kops update cluster
@@ -127,13 +140,7 @@ kops update cluster --yes
 ```
 
 
-#### 4-2. Restrict access
-
-You can restrict the following accesses to specific IP addresses.
-
-- Kubernetes API
-- SSH
-- internet-facing ALB
+#### 4-2. Restrict access to Kubernetes API and SSH
 
 To change access control for the Kubernetes API and SSH:
 
@@ -156,7 +163,17 @@ kops update cluster
 kops update cluster --yes
 ```
 
-To change access control for the internet-facing ALB, edit `vars.tf`:
+
+### 4-3. Restrict access to internet-facing ALB
+
+The following resources are needed so that the masters and nodes can access to services in the VPC:
+
+- An internal ALB
+- A Route53 private hosted zone for the internal ALB
+- A Route53 record for the internal ALB
+- A security group for the internal ALB
+
+To change access control for the internet-facing ALB, edit `tf_config.tf`:
 
 ```tf
 variable "alb_external_allow_ip" {
@@ -177,15 +194,8 @@ Apply the changes for the internet-facing ALB:
 terraform apply
 ```
 
-The following resources are created so that the masters and nodes can access to services in the VPC.
 
-- An internal ALB
-- A Route53 private hosted zone for the internal ALB
-- A Route53 record for the internal ALB
-- A security group for the internal ALB
-
-
-#### 4-3. Working with managed services
+#### 4-4. Working with managed services
 
 Terraform creates the security group `allow-from-nodes.hello.k8s.local` which allows access from the Kubernetes nodes.
 You can attach the security group to managed services such as RDS or Elasticsearch.
