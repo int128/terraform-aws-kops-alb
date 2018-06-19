@@ -6,10 +6,9 @@ This bootstraps the following stack in a few minutes:
 
 ## Goals
 
-- Publish your services via [nginx-ingress](https://github.com/kubernetes/charts/tree/master/stable/nginx-ingress), ALB, ACM and Route53.
-- Manage your Kubernetes cluster by `kubectl` and `kops`.
-- Manage your AWS resources by `terraform`.
-- Manage your Helm releases by `helmfile`.
+- Expose services via HTTPS using [nginx-ingress](https://github.com/kubernetes/charts/tree/master/stable/nginx-ingress), NodePort, ALB, ACM and Route53.
+- Bootstrap a cluster by the script.
+- Manage the cluster using `kubectl`, `helmfile`, `kops` and `terraform`.
 
 
 ## Build a new cluster
@@ -72,6 +71,7 @@ Request a certificate for the wildcard domain:
 aws acm request-certificate --domain-name "*.$kubernetes_ingress_domain" --validation-method DNS
 ```
 
+You need to approve the DNS validation.
 Open https://console.aws.amazon.com/acm/home and click the "Create record in Route53" button.
 See [AWS User Guide](https://docs.aws.amazon.com/acm/latest/userguide/gs-acm-validate-dns.html) for more.
 
@@ -199,6 +199,8 @@ terraform apply
 
 Terraform creates the security group `allow-from-nodes.hello.k8s.local` which allows access from the Kubernetes nodes.
 You can attach the security group to managed services such as RDS or Elasticsearch.
+
+See also [tf_rds.tf](tf_rds.tf).
 
 
 ## Manage the cluster
