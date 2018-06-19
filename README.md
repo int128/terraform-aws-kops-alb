@@ -164,7 +164,7 @@ kops update cluster --yes
 ```
 
 
-### 4-3. Restrict access to internet-facing ALB
+#### 4-3. Restrict access to internet-facing ALB
 
 The following resources are needed so that the masters and nodes can access to services in the VPC:
 
