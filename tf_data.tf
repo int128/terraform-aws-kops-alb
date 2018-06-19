@@ -41,7 +41,7 @@ data "aws_autoscaling_groups" "kops_nodes" {
 
   filter {
     name   = "value"
-    values = ["nodes.${var.kubernetes_cluster_name}"]
+    values = ["${formatlist("nodes-%s.%s", data.aws_availability_zones.available.names, var.kubernetes_cluster_name)}"]
   }
 }
 

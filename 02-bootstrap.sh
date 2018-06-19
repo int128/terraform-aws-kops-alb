@@ -28,19 +28,24 @@ fi
 # Create a cluster configuration
 kops create cluster \
   --name "$KOPS_CLUSTER_NAME" \
-  --zones "$KOPS_CLUSTER_ZONES" \
+  --zones "${AWS_DEFAULT_REGION}a,${AWS_DEFAULT_REGION}c" \
   --authorization RBAC \
   --ssh-public-key .sshkey.pub \
   --node-count 1 \
-  --node-size m4.large \
   --master-size t2.medium
 
+# Make single AZ nodes
+kops create instancegroup "nodes-${AWS_DEFAULT_REGION}a" --name "$KOPS_CLUSTER_NAME" --subnet "${AWS_DEFAULT_REGION}a" --edit=false
+kops delete instancegroup nodes --name "$KOPS_CLUSTER_NAME" --yes
+
 # Create AWS resources
-kops update cluster --name "$KOPS_CLUSTER_NAME"
 kops update cluster --name "$KOPS_CLUSTER_NAME" --yes
 
 # Make sure you can access to the cluster
-kops validate cluster --name "$KOPS_CLUSTER_NAME"
+while ! kops validate cluster --name "$KOPS_CLUSTER_NAME"; do
+  echo "Waiting until the cluster is available..."
+  sleep 30
+done
 
 # Initialize Terraform
 terraform init -backend-config="bucket=$TF_VAR_state_store_bucket_name"
