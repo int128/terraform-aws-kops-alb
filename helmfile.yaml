@@ -23,3 +23,5 @@ releases:
             # Large request body (e.g. file upload)
             proxy-body-size: "512m"
             server-tokens: "false"
+        defaultBackend:
+          replicaCount: 2
