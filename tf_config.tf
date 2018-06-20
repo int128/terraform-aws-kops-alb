@@ -40,6 +40,20 @@ variable "alb_internal_enabled" {
   default     = false
 }
 
+# just an example
+variable "database_admin_username" {
+  type        = "string"
+  description = "Database administrator username"
+  default     = "kubernetes"
+}
+
+# just an example
+variable "database_admin_password" {
+  type        = "string"
+  description = "Database administrator password"
+  default     = "kubernetes"
+}
+
 locals {
   # Hash of kubernetes_cluster_name and kubernetes_ingress_domain
   alb_name_hash = "${substr(sha256("${var.kubernetes_cluster_name}/${var.kubernetes_ingress_domain}"), 0, 16)}"

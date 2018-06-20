@@ -51,8 +51,20 @@ resource "aws_db_instance" "rds_for_k8s_nodes" {
   engine_version          = "9.6"
   allocated_storage       = 20
   storage_type            = "gp2"
-  username                = "kubernetes"
-  password                = "kubernetes"
+  username                = "${var.database_admin_username}"
+  password                = "${var.database_admin_password}"
   parameter_group_name    = "default.postgres9.6"
+  skip_final_snapshot     = true
   backup_retention_period = 7
+
+  tags {
+    KubernetesCluster = "${var.kubernetes_cluster_name}"
+  }
+
+  lifecycle {
+    ignore_changes = [
+      "password",
+      "allocated_storage",
+    ]
+  }
 }
