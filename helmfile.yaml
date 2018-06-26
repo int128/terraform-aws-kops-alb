@@ -3,11 +3,16 @@ releases:
     namespace: kube-system
     chart: stable/nginx-ingress
     values:
-      # https://github.com/kubernetes/ingress-nginx
+      # https://github.com/kubernetes/charts/tree/master/stable/nginx-ingress
       - rbac:
           create: true
         controller:
           replicaCount: 2
+          resources:
+            limits:
+              memory: 128Mi
+            requests:
+              memory: 128Mi
           service:
             type: NodePort
             nodePorts:
@@ -25,3 +30,8 @@ releases:
             server-tokens: "false"
         defaultBackend:
           replicaCount: 2
+          resources:
+            limits:
+              memory: 16Mi
+            requests:
+              memory: 16Mi
