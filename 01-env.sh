@@ -37,5 +37,8 @@ export TF_VAR_state_store_bucket_name="$state_store_bucket_name"
 export TF_VAR_kubernetes_ingress_domain="$kubernetes_ingress_domain"
 export TF_VAR_kubernetes_cluster_name="$kubernetes_cluster_name"
 
+# kubectl
+export KUBECONFIG="$(cd $(dirname -- "$0") && pwd)/.kubeconfig"
+
 # Use binaries in .bin
 export PATH="$(cd $(dirname -- "$0") && pwd)/.bin:$PATH"
