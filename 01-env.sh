@@ -15,10 +15,6 @@ export AWS_PROFILE=example
 # AWS Region.
 export AWS_DEFAULT_REGION=us-west-2
 
-# AWS Availability Zones.
-# Note: RDS and ALB requires multiple zones.
-export KOPS_CLUSTER_ZONES="${AWS_DEFAULT_REGION}a,${AWS_DEFAULT_REGION}c"
-
 # Load environment values excluded from VCS
 if [ -f .env ]; then
   source .env
