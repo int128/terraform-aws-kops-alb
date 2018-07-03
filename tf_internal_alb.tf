@@ -72,11 +72,12 @@ resource "aws_lb_listener" "alb_internal" {
 }
 
 resource "aws_lb_target_group" "alb_internal" {
-  count    = "${var.alb_internal_enabled}"
-  name     = "alb-int-${local.alb_name_hash}"
-  port     = 30080
-  protocol = "HTTP"
-  vpc_id   = "${data.aws_vpc.kops_vpc.id}"
+  count                = "${var.alb_internal_enabled}"
+  name                 = "alb-int-${local.alb_name_hash}"
+  port                 = 30080
+  protocol             = "HTTP"
+  vpc_id               = "${data.aws_vpc.kops_vpc.id}"
+  deregistration_delay = 30
 
   health_check {
     path = "/healthz"
