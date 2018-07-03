@@ -56,6 +56,7 @@ terraform apply
 # Initialize Helm
 kubectl create -f helm-service-account.yaml
 helm init --service-account tiller
+sleep 30
 helm version
 
 # Install Helm charts
