@@ -10,10 +10,7 @@ resource "aws_lb" "alb_internal" {
   idle_timeout       = 180
   subnets            = ["${data.aws_subnet_ids.kops_subnets.ids}"]
   security_groups    = ["${aws_security_group.alb_internal.id}"]
-
-  tags {
-    KubernetesCluster = "${var.kubernetes_cluster_name}"
-  }
+  tags               = "${map("kubernetes.io/cluster/${var.kubernetes_cluster_name}", "owned")}"
 }
 
 resource "aws_security_group" "alb_internal" {
@@ -21,6 +18,7 @@ resource "aws_security_group" "alb_internal" {
   name        = "alb.int.nodes.${var.kubernetes_cluster_name}"
   description = "Security group for internal ALB"
   vpc_id      = "${data.aws_vpc.kops_vpc.id}"
+  tags        = "${map("kubernetes.io/cluster/${var.kubernetes_cluster_name}", "owned")}"
 
   ingress {
     description = "Allow from Kubernetes masters and nodes"
@@ -39,10 +37,6 @@ resource "aws_security_group" "alb_internal" {
     to_port     = 0
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags {
-    KubernetesCluster = "${var.kubernetes_cluster_name}"
   }
 }
 
@@ -78,13 +72,10 @@ resource "aws_lb_target_group" "alb_internal" {
   protocol             = "HTTP"
   vpc_id               = "${data.aws_vpc.kops_vpc.id}"
   deregistration_delay = 30
+  tags                 = "${map("kubernetes.io/cluster/${var.kubernetes_cluster_name}", "owned")}"
 
   health_check {
     path = "/healthz"
-  }
-
-  tags {
-    KubernetesCluster = "${var.kubernetes_cluster_name}"
   }
 }
 

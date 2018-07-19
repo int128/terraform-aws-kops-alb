@@ -22,9 +22,7 @@ data "aws_acm_certificate" "service" {
 
 # VPC for the Kubernetes cluster
 data "aws_vpc" "kops_vpc" {
-  tags {
-    KubernetesCluster = "${var.kubernetes_cluster_name}"
-  }
+  tags = "${map("kubernetes.io/cluster/${var.kubernetes_cluster_name}", "owned")}"
 }
 
 # Subnets for the Kubernetes cluster
@@ -48,15 +46,13 @@ data "aws_autoscaling_groups" "kops_nodes" {
 # Security Group for the Kubernetes masters
 data "aws_security_group" "kops_masters" {
   tags {
-    Name              = "masters.${var.kubernetes_cluster_name}"
-    KubernetesCluster = "${var.kubernetes_cluster_name}"
+    Name = "masters.${var.kubernetes_cluster_name}"
   }
 }
 
 # Security Group for the Kubernetes nodes
 data "aws_security_group" "kops_nodes" {
   tags {
-    Name              = "nodes.${var.kubernetes_cluster_name}"
-    KubernetesCluster = "${var.kubernetes_cluster_name}"
+    Name = "nodes.${var.kubernetes_cluster_name}"
   }
 }

@@ -7,16 +7,14 @@ resource "aws_lb" "alb_external" {
   idle_timeout       = 180
   subnets            = ["${data.aws_subnet_ids.kops_subnets.ids}"]
   security_groups    = ["${aws_security_group.alb_external.id}"]
-
-  tags {
-    KubernetesCluster = "${var.kubernetes_cluster_name}"
-  }
+  tags               = "${map("kubernetes.io/cluster/${var.kubernetes_cluster_name}", "owned")}"
 }
 
 resource "aws_security_group" "alb_external" {
   name        = "alb.ext.nodes.${var.kubernetes_cluster_name}"
   description = "Security group for external ALB"
   vpc_id      = "${data.aws_vpc.kops_vpc.id}"
+  tags        = "${map("kubernetes.io/cluster/${var.kubernetes_cluster_name}", "owned")}"
 
   ingress {
     from_port   = 443
@@ -30,10 +28,6 @@ resource "aws_security_group" "alb_external" {
     to_port     = 0
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags {
-    KubernetesCluster = "${var.kubernetes_cluster_name}"
   }
 }
 
@@ -66,13 +60,10 @@ resource "aws_lb_target_group" "alb_external" {
   protocol             = "HTTP"
   vpc_id               = "${data.aws_vpc.kops_vpc.id}"
   deregistration_delay = 30
+  tags                 = "${map("kubernetes.io/cluster/${var.kubernetes_cluster_name}", "owned")}"
 
   health_check {
     path = "/healthz"
-  }
-
-  tags {
-    KubernetesCluster = "${var.kubernetes_cluster_name}"
   }
 }
 

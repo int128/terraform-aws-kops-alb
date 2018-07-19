@@ -4,6 +4,7 @@ resource "aws_security_group" "allow_from_k8s_nodes" {
   name        = "allow-from-nodes.${var.kubernetes_cluster_name}"
   description = "Security group for managed services accessed from k8s nodes"
   vpc_id      = "${data.aws_vpc.kops_vpc.id}"
+  tags        = "${map("kubernetes.io/cluster/${var.kubernetes_cluster_name}", "owned")}"
 
   ingress {
     description     = "Allow from Kubernetes nodes"
@@ -19,19 +20,12 @@ resource "aws_security_group" "allow_from_k8s_nodes" {
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
-
-  tags {
-    KubernetesCluster = "${var.kubernetes_cluster_name}"
-  }
 }
 
 resource "aws_db_subnet_group" "rds_for_k8s_nodes" {
   name       = "rds-for-nodes.${var.kubernetes_cluster_name}"
   subnet_ids = ["${data.aws_subnet_ids.kops_subnets.ids}"]
-
-  tags {
-    KubernetesCluster = "${var.kubernetes_cluster_name}"
-  }
+  tags       = "${map("kubernetes.io/cluster/${var.kubernetes_cluster_name}", "owned")}"
 }
 
 resource "aws_db_instance" "rds_for_k8s_nodes" {
@@ -56,10 +50,7 @@ resource "aws_db_instance" "rds_for_k8s_nodes" {
   parameter_group_name    = "default.postgres9.6"
   skip_final_snapshot     = true
   backup_retention_period = 7
-
-  tags {
-    KubernetesCluster = "${var.kubernetes_cluster_name}"
-  }
+  tags                    = "${map("kubernetes.io/cluster/${var.kubernetes_cluster_name}", "owned")}"
 
   lifecycle {
     ignore_changes = [

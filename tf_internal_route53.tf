@@ -4,10 +4,7 @@ resource "aws_route53_zone" "alb_internal" {
   count  = "${var.alb_internal_enabled}"
   name   = "${var.kubernetes_ingress_domain}"
   vpc_id = "${data.aws_vpc.kops_vpc.id}"
-
-  tags {
-    KubernetesCluster = "${var.kubernetes_cluster_name}"
-  }
+  tags   = "${map("kubernetes.io/cluster/${var.kubernetes_cluster_name}", "owned")}"
 }
 
 resource "aws_route53_record" "alb_internal" {
