@@ -1,4 +1,5 @@
 ## Environment specific values.
+set -x
 
 # Domain name for the external ALB.
 kubernetes_ingress_domain=dev.example.com
@@ -38,3 +39,13 @@ export KUBECONFIG="$(cd $(dirname -- "$0") && pwd)/.kubeconfig"
 
 # Use binaries in .bin
 export PATH="$(cd $(dirname -- "$0") && pwd)/.bin:$PATH"
+
+
+
+## Terraform output used by Helmfile
+
+export efs_provisoner_file_system_id="$(terraform output efs_provisoner_file_system_id 2> /dev/null)"
+
+
+
+set +x

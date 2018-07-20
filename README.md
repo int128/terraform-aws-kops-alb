@@ -103,6 +103,7 @@ By default the script will create the following components:
   - An internet-facing ALB
   - A Route53 record for the internet-facing ALB
   - A security group for the internet-facing ALB
+  - An EFS filesystem for Persistent Volumes
 - kubectl
   - `ServiceAccount` and `ClusterRoleBinding` for the Helm tiller
   - `echoserver`
@@ -200,7 +201,7 @@ terraform apply
 Terraform creates the security group `allow-from-nodes.hello.k8s.local` which allows access from the Kubernetes nodes.
 You can attach the security group to managed services such as RDS or Elasticsearch.
 
-See also [tf_rds.tf](tf_rds.tf).
+See also [tf_managed_services.tf](tf_managed_services.tf).
 
 
 ## Manage the cluster
@@ -261,6 +262,7 @@ Cluster | EBS for PVs | gp2 | $0.1/GB
 Cluster | ALB | - | free
 Cluster | Route53 Hosted Zone | - | $0.5
 Cluster | S3  | - | free
+Managed | EFS | General Purpose up to 5GB | free
 Managed | RDS | t2.micro gp2 20GB | free
 Managed | Elasticsearch | t2.micro gp2 10GB | free
 

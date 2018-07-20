@@ -35,3 +35,12 @@ releases:
               memory: 16Mi
             requests:
               memory: 16Mi
+
+  - name: efs-provisioner
+    namespace: kube-system
+    chart: stable/efs-provisioner
+    values:
+      - efsProvisioner:
+          efsFileSystemId: {{ requiredEnv "efs_provisoner_file_system_id" }}
+          awsRegion: {{ requiredEnv "AWS_DEFAULT_REGION" }}
+          path: /
