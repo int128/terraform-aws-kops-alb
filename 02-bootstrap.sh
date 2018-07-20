@@ -61,3 +61,6 @@ helm version
 
 # Install Helm charts
 helmfile sync
+
+# Switch default storage class to EFS
+kubectl patch storageclass gp2 -p '{"metadata": {"annotations": {"storageclass.beta.kubernetes.io/is-default-class": null}}}'

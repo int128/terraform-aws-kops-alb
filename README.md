@@ -105,10 +105,11 @@ By default the script will create the following components:
   - A security group for the internet-facing ALB
   - An EFS filesystem for Persistent Volumes
 - kubectl
-  - `ServiceAccount` and `ClusterRoleBinding` for the Helm tiller
-  - `echoserver`
+  - Create `ServiceAccount` and `ClusterRoleBinding` for the Helm tiller
+  - Patch `StorageClass/gp2` to remove the default storage class
 - Helm
   - `nginx-ingress`
+  - `efs-provisioner`
 
 Bootstrap a cluster.
 
