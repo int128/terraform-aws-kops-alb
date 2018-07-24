@@ -104,12 +104,15 @@ By default the script will create the following components:
   - A Route53 record for the internet-facing ALB
   - A security group for the internet-facing ALB
   - An EFS filesystem for Persistent Volumes
+  - An Elasticsearch domain for Kubernetes logs
 - kubectl
   - Create `ServiceAccount` and `ClusterRoleBinding` for the Helm tiller
   - Patch `StorageClass/gp2` to remove the default storage class
 - Helm
   - `nginx-ingress`
   - `efs-provisioner`
+  - `fluent-bit`
+  - `kibana`
 
 Bootstrap a cluster.
 
@@ -265,7 +268,7 @@ Cluster | Route53 Hosted Zone | - | $0.5
 Cluster | S3  | - | free
 Managed | EFS | General Purpose up to 5GB | free
 Managed | RDS | t2.micro gp2 20GB | free
-Managed | Elasticsearch | t2.micro gp2 10GB | free
+Managed | Elasticsearch | t2.small gp2 10GB | free
 
 The cluster name must be a domain name in order to reduce an ELB for masters.
 

@@ -56,5 +56,5 @@ variable "database_admin_password" {
 
 locals {
   # Hash of kubernetes_cluster_name and kubernetes_ingress_domain
-  alb_name_hash = "${substr(sha256("${var.kubernetes_cluster_name}/${var.kubernetes_ingress_domain}"), 0, 16)}"
+  kubernetes_cluster_name_hash = "${substr(sha256("${var.kubernetes_cluster_name}/${var.kubernetes_ingress_domain}"), 0, 16)}"
 }

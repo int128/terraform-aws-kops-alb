@@ -1,7 +1,7 @@
 ## External ALB for Kubernetes services.
 
 resource "aws_lb" "alb_external" {
-  name               = "alb-ext-${local.alb_name_hash}"
+  name               = "alb-ext-${local.kubernetes_cluster_name_hash}"
   load_balancer_type = "application"
   internal           = false
   idle_timeout       = 180
@@ -55,7 +55,7 @@ resource "aws_lb_listener" "alb_external" {
 }
 
 resource "aws_lb_target_group" "alb_external" {
-  name                 = "alb-ext-${local.alb_name_hash}"
+  name                 = "alb-ext-${local.kubernetes_cluster_name_hash}"
   port                 = 30080
   protocol             = "HTTP"
   vpc_id               = "${data.aws_vpc.kops_vpc.id}"

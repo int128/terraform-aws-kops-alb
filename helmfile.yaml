@@ -48,3 +48,37 @@ releases:
           storageClass:
             name: efs
             isDefault: true
+
+  - name: fluent-bit
+    namespace: kube-system
+    chart: stable/fluent-bit
+    values:
+      # https://github.com/helm/charts/tree/master/stable/fluent-bit
+      - backend:
+          type: es
+          es:
+            host: {{ requiredEnv "es_logs_endpoint" }}
+            port: 443
+            tls: "on"
+        resources:
+          limits:
+            memory: 64Mi
+          requests:
+            cpu: 0
+            memory: 64Mi
+
+  - name: kibana
+    namespace: kube-system
+    chart: stable/kibana
+    values:
+      # https://github.com/helm/charts/tree/master/stable/kibana
+      - env:
+          ELASTICSEARCH_URL: https://{{ requiredEnv "es_logs_endpoint" }}:443
+        image:
+          tag: 6.2.4
+        # TODO: ingress
+        resources:
+          limits:
+            memory: 256Mi
+          requests:
+            memory: 256Mi
