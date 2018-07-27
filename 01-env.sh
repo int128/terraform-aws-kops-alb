@@ -2,19 +2,29 @@
 set -x
 
 # Domain name for the external ALB.
-kubernetes_ingress_domain=dev.example.com
+export kubernetes_ingress_domain=dev.example.com
 
 # Kubernetes cluster name.
-kubernetes_cluster_name=hello.k8s.local
+export kubernetes_cluster_name=hello.k8s.local
 
 # Bucket name for state store of kops and Terraform.
-state_store_bucket_name="state.$kubernetes_cluster_name"
+export state_store_bucket_name="state.$kubernetes_cluster_name"
 
 # AWS Profile.
 export AWS_PROFILE=example
 
 # AWS Region.
 export AWS_DEFAULT_REGION=us-west-2
+
+## OIDC provider for Kubernetes Dashboard and Kibana.
+## See also https://github.com/int128/kubernetes-dashboard-proxy
+#export oidc_discovery_url=https://accounts.google.com
+#export oidc_kubernetes_dashboard_client_id=xxx-xxx.apps.googleusercontent.com
+#export oidc_kubernetes_dashboard_client_secret=xxxxxx
+#export oidc_kibana_client_id=xxx-xxx.apps.googleusercontent.com
+#export oidc_kibana_client_secret=xxxxxx
+
+
 
 # Load environment values excluded from VCS
 if [ -f .env ]; then

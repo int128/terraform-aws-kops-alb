@@ -1,9 +1,9 @@
 releases:
+  # https://github.com/kubernetes/charts/tree/master/stable/nginx-ingress
   - name: nginx-ingress
     namespace: kube-system
     chart: stable/nginx-ingress
     values:
-      # https://github.com/kubernetes/charts/tree/master/stable/nginx-ingress
       - rbac:
           create: true
         controller:
@@ -19,8 +19,8 @@ releases:
               http: 30080
           stats:
             enabled: true
-          # https://github.com/kubernetes/ingress-nginx/blob/master/docs/user-guide/configmap.md
           config:
+            # https://github.com/kubernetes/ingress-nginx/blob/master/docs/user-guide/configmap.md
             proxy-read-timeout: "180"
             proxy-send-timeout: "180"
             # Large request header (e.g. OIDC proxy)
@@ -36,11 +36,11 @@ releases:
             requests:
               memory: 16Mi
 
+  # https://github.com/helm/charts/tree/master/stable/efs-provisioner
   - name: efs-provisioner
     namespace: kube-system
     chart: stable/efs-provisioner
     values:
-      # https://github.com/helm/charts/tree/master/stable/efs-provisioner
       - efsProvisioner:
           efsFileSystemId: {{ requiredEnv "efs_provisoner_file_system_id" }}
           awsRegion: {{ requiredEnv "AWS_DEFAULT_REGION" }}
@@ -49,11 +49,44 @@ releases:
             name: efs
             isDefault: true
 
+  # https://github.com/kubernetes/charts/tree/master/stable/kubernetes-dashboard
+  - name: kubernetes-dashboard
+    namespace: kube-system
+    chart: stable/kubernetes-dashboard
+
+  # https://github.com/kubernetes/charts/tree/master/stable/heapster
+  - name: heapster
+    namespace: kube-system
+    chart: stable/heapster
+
+#{{ if env "oidc_kubernetes_dashboard_client_id" }}
+  # https://github.com/int128/kubernetes-dashboard-proxy
+  - name: kubernetes-dashboard-proxy
+    namespace: kube-system
+    chart: int128.github.io/kubernetes-dashboard-proxy
+    values:
+      - ingress:
+          enabled: true
+          hosts:
+            - kubernetes-dashboard.{{ requiredEnv "kubernetes_ingress_domain" }}
+        proxy:
+          oidc:
+            discoveryURL: {{ requiredEnv "oidc_discovery_url" }}
+            redirectURL: https://kubernetes-dashboard.{{ requiredEnv "kubernetes_ingress_domain" }}
+            clientID: {{ requiredEnv "oidc_kubernetes_dashboard_client_id" }}
+            clientSecret: {{ requiredEnv "oidc_kubernetes_dashboard_client_secret" }}
+        resources:
+          limits:
+            memory: 32Mi
+          requests:
+            memory: 32Mi
+#{{ end }}
+
+  # https://github.com/helm/charts/tree/master/stable/fluent-bit
   - name: fluent-bit
     namespace: kube-system
     chart: stable/fluent-bit
     values:
-      # https://github.com/helm/charts/tree/master/stable/fluent-bit
       - backend:
           type: es
           es:
@@ -82,3 +115,32 @@ releases:
             memory: 256Mi
           requests:
             memory: 256Mi
+
+#{{ if env "oidc_kibana_client_id" }}
+  # https://github.com/int128/kubernetes-dashboard-proxy
+  - name: kibana-proxy
+    namespace: kube-system
+    chart: int128.github.io/kubernetes-dashboard-proxy
+    values:
+      - ingress:
+          enabled: true
+          hosts:
+            - kibana.{{ requiredEnv "kubernetes_ingress_domain" }}
+        proxy:
+          upstreamURL: http://kibana.kube-system.svc.cluster.local:443
+          enableAuthorizationHeader: false
+          oidc:
+            discoveryURL: {{ requiredEnv "oidc_discovery_url" }}
+            redirectURL: https://kibana.{{ requiredEnv "kubernetes_ingress_domain" }}
+            clientID: {{ requiredEnv "oidc_kibana_client_id" }}
+            clientSecret: {{ requiredEnv "oidc_kibana_client_secret" }}
+        resources:
+          limits:
+            memory: 32Mi
+          requests:
+            memory: 32Mi
+#{{ end }}
+
+repositories:
+  - name: int128.github.io
+    url: https://int128.github.io/helm-charts

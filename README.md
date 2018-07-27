@@ -109,10 +109,13 @@ By default the script will create the following components:
   - Create `ServiceAccount` and `ClusterRoleBinding` for the Helm tiller
   - Patch `StorageClass/gp2` to remove the default storage class
 - Helm
-  - `nginx-ingress`
-  - `efs-provisioner`
-  - `fluent-bit`
-  - `kibana`
+  - [`stable/nginx-ingress`](https://github.com/kubernetes/charts/tree/master/stable/nginx-ingress)
+  - [`stable/kubernetes-dashboard`](https://github.com/kubernetes/charts/tree/master/stable/kubernetes-dashboard)
+  - [`int128.github.io/kubernetes-dashboard-proxy`](https://github.com/int128/kubernetes-dashboard-proxy)
+  - [`stable/heapster`](https://github.com/kubernetes/charts/tree/master/stable/heapster)
+  - [`stable/efs-provisioner`](https://github.com/helm/charts/tree/master/stable/efs-provisioner)
+  - [`stable/fluent-bit`](https://github.com/helm/charts/tree/master/stable/fluent-bit)
+  - [`stable/kibana`](https://github.com/helm/charts/tree/master/stable/kibana)
 
 Bootstrap a cluster.
 
@@ -200,7 +203,24 @@ terraform apply
 ```
 
 
-#### 4-4. Working with managed services
+#### 4-4. OIDC authentication
+
+You can setup OIDC authentication for exposing Kubernetes Dashboard and Kibana.
+
+If you want to use your Google Account, create an OAuth client on [Google APIs Console](https://console.developers.google.com/apis/credentials) and change the client ID and secret in `01-env.sh` as follows:
+
+```sh
+export oidc_discovery_url=https://accounts.google.com
+export oidc_kubernetes_dashboard_client_id=xxx-xxx.apps.googleusercontent.com
+export oidc_kubernetes_dashboard_client_secret=xxxxxx
+export oidc_kibana_client_id=xxx-xxx.apps.googleusercontent.com
+export oidc_kibana_client_secret=xxxxxx
+```
+
+See also the tutorial at [int128/kubernetes-dashboard-proxy](https://github.com/int128/kubernetes-dashboard-proxy).
+
+
+#### 4-5. Working with managed services
 
 Terraform creates the security group `allow-from-nodes.hello.k8s.local` which allows access from the Kubernetes nodes.
 You can attach the security group to managed services such as RDS or Elasticsearch.
