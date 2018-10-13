@@ -24,7 +24,7 @@ function main () {
   fi
 
   if need_to_install_command helm; then
-    local helm_version="$(curl -sS https://api.github.com/repos/kubernetes/helm/releases/latest | jq -r .tag_name)"
+    local helm_version="$(curl -sSL https://api.github.com/repos/kubernetes/helm/releases/latest | jq -r .tag_name)"
     install_from_tgz helm "https://storage.googleapis.com/kubernetes-helm/helm-${helm_version}-linux-amd64.tar.gz" linux-amd64/helm
   fi
 
