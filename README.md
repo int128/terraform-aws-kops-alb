@@ -23,8 +23,7 @@ Install the following tools:
 
 ```sh
 # macOS
-brew install awscli kubectl kops helm terraform
-./00-install.sh   # Install helmfile
+brew install awscli kubectl kops terraform helm helmfile
 
 # WSL/Ubuntu
 sudo apt install awscli
