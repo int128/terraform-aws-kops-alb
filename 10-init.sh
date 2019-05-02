@@ -25,7 +25,7 @@ kops export kubecfg
 kops validate cluster
 
 # Initialize Terraform
-terraform init -backend-config="bucket=$TF_VAR_state_store_bucket_name"
+terraform init -backend-config="bucket=$state_store_bucket_name"
 
 # Initialize Helm
 helm init --client-only

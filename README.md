@@ -90,6 +90,12 @@ aws s3api put-bucket-versioning \
   --versioning-configuration "Status=Enabled"
 ```
 
+Initialize the state store of Terraform.
+
+```sh
+terraform init -backend-config="bucket=$state_store_bucket_name"
+```
+
 
 ### 3. Bootstrap
 

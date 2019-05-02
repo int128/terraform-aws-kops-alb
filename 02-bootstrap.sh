@@ -47,9 +47,6 @@ while ! kops validate cluster --name "$KOPS_CLUSTER_NAME"; do
   sleep 30
 done
 
-# Initialize Terraform
-terraform init -backend-config="bucket=$TF_VAR_state_store_bucket_name"
-
 # Create AWS resources
 terraform apply
 

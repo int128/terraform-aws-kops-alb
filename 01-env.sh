@@ -40,7 +40,6 @@ export KOPS_STATE_STORE="s3://$state_store_bucket_name"
 export KOPS_CLUSTER_NAME="$kubernetes_cluster_name"
 
 # Terraform
-export TF_VAR_state_store_bucket_name="$state_store_bucket_name"
 export TF_VAR_kubernetes_ingress_domain="$kubernetes_ingress_domain"
 export TF_VAR_kubernetes_cluster_name="$kubernetes_cluster_name"
 
