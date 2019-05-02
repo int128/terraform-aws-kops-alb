@@ -22,12 +22,7 @@ Make sure you have the following items:
 Install the following tools:
 
 ```sh
-# macOS
 brew install awscli kubectl kops terraform helm helmfile
-
-# WSL/Ubuntu
-sudo apt install awscli
-./00-install.sh   # Install kubectl, kops, helm, terraform and helmfile
 ```
 
 
@@ -98,6 +93,9 @@ terraform init -backend-config="bucket=$state_store_bucket_name"
 
 
 ### 3. Bootstrap
+
+
+
 
 By default the script will create the following components:
 
