@@ -29,6 +29,9 @@ done
 # Create AWS resources
 terraform apply
 
+# Reload the environment variable for the EFS filesystem ID.
+source 01-env.sh
+
 # Initialize Helm
 kubectl create -f helm-service-account.yaml
 helm init --service-account tiller --history-max 100
