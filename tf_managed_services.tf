@@ -41,65 +41,6 @@ output "efs_provisoner_file_system_id" {
   value = "${aws_efs_file_system.efs_provisioner.id}"
 }
 
-# Elasticsearch for Kubernetes logs
-resource "aws_elasticsearch_domain" "logs" {
-  domain_name           = "logs-${local.kubernetes_cluster_name_hash}"
-  elasticsearch_version = "6.2"
-
-  cluster_config {
-    instance_type          = "t2.small.elasticsearch"
-    zone_awareness_enabled = false
-  }
-
-  ebs_options {
-    ebs_enabled = true
-    volume_type = "gp2"
-    volume_size = 10
-  }
-
-  vpc_options {
-    subnet_ids         = ["${data.aws_subnet_ids.kops_subnets.ids[0]}"]
-    security_group_ids = ["${aws_security_group.allow_from_k8s_nodes.id}"]
-  }
-
-  tags = "${merge(
-    map("kubernetes.io/cluster/${var.kubernetes_cluster_name}", "owned"),
-    map("Name", "logs.${var.kubernetes_cluster_name}")
-  )}"
-}
-
-resource "aws_iam_service_linked_role" "es" {
-  # https://github.com/terraform-providers/terraform-provider-aws/issues/5218
-  aws_service_name = "es.amazonaws.com"
-}
-
-data "aws_iam_policy_document" "es_logs_access" {
-  statement {
-    actions = [
-      "es:*",
-    ]
-
-    resources = [
-      "${aws_elasticsearch_domain.logs.arn}",
-      "${aws_elasticsearch_domain.logs.arn}/*",
-    ]
-
-    principals {
-      type        = "AWS"
-      identifiers = ["*"]
-    }
-  }
-}
-
-resource "aws_elasticsearch_domain_policy" "es_logs_access" {
-  domain_name     = "${aws_elasticsearch_domain.logs.domain_name}"
-  access_policies = "${data.aws_iam_policy_document.es_logs_access.json}"
-}
-
-output "es_logs_endpoint" {
-  value = "${aws_elasticsearch_domain.logs.endpoint}"
-}
-
 # RDS
 resource "aws_db_subnet_group" "rds_for_k8s_nodes" {
   name       = "rds-for-nodes.${var.kubernetes_cluster_name}"

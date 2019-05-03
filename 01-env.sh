@@ -54,7 +54,6 @@ export PATH="$(cd $(dirname -- "$0") && pwd)/.bin:$PATH"
 ## Terraform output used by Helmfile
 
 export efs_provisoner_file_system_id="$(terraform output efs_provisoner_file_system_id 2> /dev/null)"
-export es_logs_endpoint="$(terraform output es_logs_endpoint 2> /dev/null)"
 
 
 
