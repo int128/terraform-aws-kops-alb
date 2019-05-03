@@ -31,7 +31,7 @@ terraform apply
 
 # Initialize Helm
 kubectl create -f helm-service-account.yaml
-helm init --service-account tiller
+helm init --service-account tiller --history-max 100
 while ! helm version; do
   echo "Waiting until the helm tiller is available..."
   sleep 10
