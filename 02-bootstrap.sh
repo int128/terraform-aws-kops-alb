@@ -20,31 +20,10 @@ terraform version
 helm version -c
 helmfile -v
 
-# Generate a key pair to connect to EC2 instances
-if [ ! -f .sshkey ]; then
-  ssh-keygen -f .sshkey -N ''
-fi
-
-# Create a cluster configuration
-kops create cluster \
-  --name "$KOPS_CLUSTER_NAME" \
-  --zones "${AWS_DEFAULT_REGION}a,${AWS_DEFAULT_REGION}c" \
-  --authorization RBAC \
-  --ssh-public-key .sshkey.pub \
-  --node-count 1 \
-  --master-size t2.medium
-
-# Make single AZ nodes
-kops create instancegroup "nodes-${AWS_DEFAULT_REGION}a" --name "$KOPS_CLUSTER_NAME" --subnet "${AWS_DEFAULT_REGION}a" --edit=false
-kops delete instancegroup nodes --name "$KOPS_CLUSTER_NAME" --yes
-
-# Create AWS resources
-kops update cluster --name "$KOPS_CLUSTER_NAME" --yes
-
 # Make sure you can access to the cluster
-while ! kops validate cluster --name "$KOPS_CLUSTER_NAME"; do
+while ! kops validate cluster; do
   echo "Waiting until the cluster is available..."
-  sleep 30
+  sleep 10
 done
 
 # Create AWS resources
@@ -53,8 +32,10 @@ terraform apply
 # Initialize Helm
 kubectl create -f helm-service-account.yaml
 helm init --service-account tiller
-sleep 30
-helm version
+while ! helm version; do
+  echo "Waiting until the helm tiller is available..."
+  sleep 10
+done
 
 # Install Helm charts
 helmfile sync

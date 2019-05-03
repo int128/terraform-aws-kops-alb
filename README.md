@@ -13,6 +13,8 @@ This bootstraps the following stack in a few minutes:
 
 ## Build a new cluster
 
+### 1. Setup your environment
+
 Make sure you have the following items:
 
 - An AWS account
@@ -25,26 +27,29 @@ Install the following tools:
 brew install awscli kubectl kops terraform helm helmfile
 ```
 
+Change the file [`01-env.sh`](01-env.sh) with your environment values.
+If you do not want to save the environment values to your Git repository, you can put your values into the file `.env` instead.
 
-### 1. Configure
-
-Change [`01-env.sh`](01-env.sh) with your environment values.
-If you do not want to push the environment values to the Git repository, you can put your values into `.env` instead.
-
-Then load the values.
+Load the values:
 
 ```sh
 source 01-env.sh
 ```
 
-Configure your AWS credentials.
+Configure your AWS credentials:
 
 ```sh
 aws configure --profile "$AWS_PROFILE"
 ```
 
+Generate a key pair to connect to EC2 instances:
 
-### 2. Setup
+```sh
+ssh-keygen -f .sshkey -N ''
+```
+
+
+### 2. Create base components
 
 #### 2-1. Route53
 
@@ -72,7 +77,7 @@ See [AWS User Guide](https://docs.aws.amazon.com/acm/latest/userguide/gs-acm-val
 
 #### 2-3. S3
 
-Create a bucket for state store of kops and Terraform.
+Create a bucket for the state store of kops and Terraform.
 You must enable bucket versioning.
 
 ```sh
@@ -92,16 +97,77 @@ terraform init -backend-config="bucket=$state_store_bucket_name"
 ```
 
 
-### 3. Bootstrap
+### 3. Create a cluster
+
+Create a cluster configuration:
+
+```sh
+kops create cluster \
+  --name "$KOPS_CLUSTER_NAME" \
+  --zones "${AWS_DEFAULT_REGION}a,${AWS_DEFAULT_REGION}c" \
+  --ssh-public-key .sshkey.pub
+
+# recreate the instance group for single AZ
+kops create instancegroup "nodes-${AWS_DEFAULT_REGION}a" --name "$KOPS_CLUSTER_NAME" --subnet "${AWS_DEFAULT_REGION}a" --edit=false
+kops delete instancegroup nodes --name "$KOPS_CLUSTER_NAME" --yes
+```
+
+You can change the configuration:
+
+```sh
+kops edit cluster
+kops edit instancegroup "master-${AWS_DEFAULT_REGION}a"
+kops edit instancegroup "nodes-${AWS_DEFAULT_REGION}a"
+```
+
+Finally create actual resources for the cluster:
+
+```sh
+kops update cluster --yes
+```
+
+#### Minimum instance type and volume size
+
+Here is an example of minimum size.
+You can use spot instances of `m3.medium`.
+As well as you can reduce size of root volumes.
+This is not for production.
+
+```yaml
+# kops edit cluster
+spec:
+  etcdClusters:
+  - etcdMembers:
+    - instanceGroup: master-us-west-2a
+      name: a
+      volumeSize: 1
+    name: main
+  - etcdMembers:
+    - instanceGroup: master-us-west-2a
+      name: a
+      volumeSize: 1
+    name: events
+```
+
+```yaml
+# kops edit instancegroup
+spec:
+  machineType: m3.medium
+  maxPrice: "0.02"
+  rootVolumeSize: 10
+```
 
 
+### 4. Create additional components
 
+Run the script:
+
+```sh
+./02-bootstrap.sh
+```
 
 By default the script will create the following components:
 
-- kops
-  - 1 master (t2.medium) in a single AZ
-  - 2 nodes (t2.medium) in a single AZ
 - Terraform
   - An internet-facing ALB
   - A Route53 record for the internet-facing ALB
@@ -120,38 +186,39 @@ By default the script will create the following components:
   - [`stable/fluent-bit`](https://github.com/helm/charts/tree/master/stable/fluent-bit)
   - [`stable/kibana`](https://github.com/helm/charts/tree/master/stable/kibana)
 
-Bootstrap a cluster.
+
+## Manage the cluster
+
+### Operation
+
+Tell the following steps to your team members.
+
+Onboarding:
 
 ```sh
-./02-bootstrap.sh
+source 01-env.sh
+
+# Configure your AWS credentials.
+aws configure --profile "$AWS_PROFILE"
+
+# Initialize kubectl and Terraform.
+./10-init.sh
 ```
 
-
-### 4. Customize
-
-#### 4-1. Change instance type
-
-You can change instance type of the master:
+Daily operation:
 
 ```sh
-kops edit ig "master-${AWS_DEFAULT_REGION}a"
+source 01-env.sh
+
+# Now you can execute the following tools.
+kops
+terraform
+helmfile
 ```
 
-You can change instance type of the nodes:
+### Customizing
 
-```sh
-kops edit ig "nodes-${AWS_DEFAULT_REGION}a"
-```
-
-Apply the changes:
-
-```sh
-kops update cluster
-kops update cluster --yes
-```
-
-
-#### 4-2. Restrict access to Kubernetes API and SSH
+#### Restrict access to Kubernetes API and SSH
 
 To change access control for the Kubernetes API and SSH:
 
@@ -175,7 +242,7 @@ kops update cluster --yes
 ```
 
 
-#### 4-3. Restrict access to internet-facing ALB
+#### Restrict access to internet-facing ALB
 
 The following resources are needed so that the masters and nodes can access to services in the VPC:
 
@@ -206,7 +273,7 @@ terraform apply
 ```
 
 
-#### 4-4. OIDC authentication
+#### OIDC authentication
 
 You can setup OIDC authentication for exposing Kubernetes Dashboard and Kibana.
 
@@ -223,40 +290,12 @@ export oidc_kibana_client_secret=xxxxxx
 See also the tutorial at [int128/kubernetes-dashboard-proxy](https://github.com/int128/kubernetes-dashboard-proxy).
 
 
-#### 4-5. Working with managed services
+#### Working with managed services
 
 Terraform creates the security group `allow-from-nodes.hello.k8s.local` which allows access from the Kubernetes nodes.
 You can attach the security group to managed services such as RDS or Elasticsearch.
 
 See also [tf_managed_services.tf](tf_managed_services.tf).
-
-
-## Manage the cluster
-
-Tell the following steps to your team members.
-
-### On boarding
-
-```sh
-source 01-env.sh
-
-# Configure your AWS credentials.
-aws configure --profile "$AWS_PROFILE"
-
-# Initialize kubectl and Terraform.
-./10-init.sh
-```
-
-### Daily operation
-
-```sh
-source 01-env.sh
-
-# Now you can execute the following tools.
-kops
-terraform
-helmfile
-```
 
 
 ## Destroy the cluster
@@ -298,40 +337,6 @@ The cluster name must be a domain name in order to reduce an ELB for masters.
 ```sh
 # 01-env.sh
 kubernetes_cluster_name=dev.example.com
-```
-
-Reduce size of the volumes:
-
-```yaml
-# kops edit cluster
-spec:
-  etcdClusters:
-  - etcdMembers:
-    - instanceGroup: master-us-west-2a
-      name: a
-      volumeSize: 5
-    name: main
-    version: 3.2.14
-  - etcdMembers:
-    - instanceGroup: master-us-west-2a
-      name: a
-      volumeSize: 5
-    name: events
-    version: 3.2.14
----
-# kops edit ig master-us-west-2a
-spec:
-  machineType: m3.medium
-  maxPrice: "0.02"
-  rootVolumeSize: 10
----
-# kops edit ig nodes
-spec:
-  machineType: m3.medium
-  maxPrice: "0.02"
-  rootVolumeSize: 10
-  subnets:
-  - us-west-2a
 ```
 
 
