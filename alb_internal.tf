@@ -4,21 +4,21 @@
 
 resource "aws_lb" "alb_internal" {
   count              = "${var.alb_internal_enabled}"
-  name               = "alb-int-${local.kubernetes_cluster_name_hash}"
+  name               = "alb-int-${local.cluster_name_hash}"
   load_balancer_type = "application"
   internal           = true
   idle_timeout       = 180
   subnets            = ["${data.aws_subnet_ids.kops_subnets.ids}"]
   security_groups    = ["${aws_security_group.alb_internal.id}"]
-  tags               = "${map("kubernetes.io/cluster/${var.kubernetes_cluster_name}", "owned")}"
+  tags               = "${map("kubernetes.io/cluster/${var.kops_cluster_name}", "owned")}"
 }
 
 resource "aws_security_group" "alb_internal" {
   count       = "${var.alb_internal_enabled}"
-  name        = "alb.int.nodes.${var.kubernetes_cluster_name}"
+  name        = "alb.int.nodes.${var.kops_cluster_name}"
   description = "Security group for internal ALB"
   vpc_id      = "${data.aws_vpc.kops_vpc.id}"
-  tags        = "${map("kubernetes.io/cluster/${var.kubernetes_cluster_name}", "owned")}"
+  tags        = "${map("kubernetes.io/cluster/${var.kops_cluster_name}", "owned")}"
 
   ingress {
     description = "Allow from Kubernetes masters and nodes"
@@ -67,12 +67,12 @@ resource "aws_lb_listener" "alb_internal" {
 
 resource "aws_lb_target_group" "alb_internal" {
   count                = "${var.alb_internal_enabled}"
-  name                 = "alb-int-${local.kubernetes_cluster_name_hash}"
-  port                 = 30080
+  name                 = "alb-int-${local.cluster_name_hash}"
+  port                 = "${var.kubernetes_ingress_port}"
   protocol             = "HTTP"
   vpc_id               = "${data.aws_vpc.kops_vpc.id}"
   deregistration_delay = 30
-  tags                 = "${map("kubernetes.io/cluster/${var.kubernetes_cluster_name}", "owned")}"
+  tags                 = "${map("kubernetes.io/cluster/${var.kops_cluster_name}", "owned")}"
 
   health_check {
     path = "/healthz"
