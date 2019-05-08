@@ -1,0 +1,49 @@
+releases:
+  # https://github.com/codecentric/helm-charts/tree/master/charts/keycloak
+  - name: keycloak
+    namespace: oidc
+    chart: codecentric/keycloak
+    values:
+      - keycloak:
+          ingress:
+            enabled: true
+            path: /auth
+            hosts:
+              - keycloak.{{ requiredEnv "kubernetes_ingress_domain" }}
+          persistence:
+            dbVendor: postgres
+            dbHost: {{ requiredEnv "keycloak_postgres_host" }}
+            dbUser: keycloak
+            dbPassword: keycloak
+          resources:
+            limits:
+              memory: 512Mi
+            requests:
+              memory: 512Mi
+
+  # https://github.com/int128/kubernetes-dashboard-proxy
+  - name: kubernetes-dashboard-proxy
+    namespace: oidc
+    chart: int128.github.io/kubernetes-dashboard-proxy
+    values:
+      - ingress:
+          enabled: true
+          hosts:
+            - kubernetes-dashboard.{{ requiredEnv "kubernetes_ingress_domain" }}
+        proxy:
+          oidc:
+            discoveryURL: {{ requiredEnv "oidc_discovery_url" }}
+            redirectURL: https://kubernetes-dashboard.{{ requiredEnv "kubernetes_ingress_domain" }}
+            clientID: {{ requiredEnv "oidc_kubernetes_dashboard_client_id" }}
+            clientSecret: {{ requiredEnv "oidc_kubernetes_dashboard_client_secret" }}
+        resources:
+          limits:
+            memory: 32Mi
+          requests:
+            memory: 32Mi
+
+repositories:
+  - name: codecentric
+    url: https://codecentric.github.io/helm-charts
+  - name: int128.github.io
+    url: https://int128.github.io/helm-charts
