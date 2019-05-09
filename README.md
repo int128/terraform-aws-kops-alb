@@ -1,4 +1,4 @@
-# terraform-aws-kops-alb
+# terraform-aws-kops-alb [![CircleCI](https://circleci.com/gh/int128/terraform-aws-kops-alb.svg?style=shield)](https://circleci.com/gh/int128/terraform-aws-kops-alb)
 
 This is a Terraform module which provides AWS ALB and Route53 for publishing services via nginx-ingress on kops.
 
