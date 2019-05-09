@@ -1,20 +1,20 @@
 ## External ALB for Kubernetes services.
 
 resource "aws_lb" "alb_external" {
-  name               = "alb-ext-${local.kubernetes_cluster_name_hash}"
+  name               = "alb-ext-${local.cluster_name_hash}"
   load_balancer_type = "application"
   internal           = false
   idle_timeout       = 180
   subnets            = ["${data.aws_subnet_ids.kops_subnets.ids}"]
   security_groups    = ["${aws_security_group.alb_external.id}"]
-  tags               = "${map("kubernetes.io/cluster/${var.kubernetes_cluster_name}", "owned")}"
+  tags               = "${map("kubernetes.io/cluster/${var.kops_cluster_name}", "owned")}"
 }
 
 resource "aws_security_group" "alb_external" {
-  name        = "alb.ext.nodes.${var.kubernetes_cluster_name}"
+  name        = "alb.ext.nodes.${var.kops_cluster_name}"
   description = "Security group for external ALB"
   vpc_id      = "${data.aws_vpc.kops_vpc.id}"
-  tags        = "${map("kubernetes.io/cluster/${var.kubernetes_cluster_name}", "owned")}"
+  tags        = "${map("kubernetes.io/cluster/${var.kops_cluster_name}", "owned")}"
 
   ingress {
     from_port   = 443
@@ -55,12 +55,12 @@ resource "aws_lb_listener" "alb_external" {
 }
 
 resource "aws_lb_target_group" "alb_external" {
-  name                 = "alb-ext-${local.kubernetes_cluster_name_hash}"
-  port                 = 30080
+  name                 = "alb-ext-${local.cluster_name_hash}"
+  port                 = "${var.kubernetes_ingress_port}"
   protocol             = "HTTP"
   vpc_id               = "${data.aws_vpc.kops_vpc.id}"
   deregistration_delay = 30
-  tags                 = "${map("kubernetes.io/cluster/${var.kubernetes_cluster_name}", "owned")}"
+  tags                 = "${map("kubernetes.io/cluster/${var.kops_cluster_name}", "owned")}"
 
   health_check {
     path = "/healthz"

@@ -1,0 +1,12 @@
+version: "2"
+jobs:
+  build:
+    docker:
+      - image: hashicorp/terraform:light
+    environment:
+      AWS_REGION: us-west-2
+    steps:
+      - checkout
+      - run: terraform init
+      - run: terraform fmt -check=true -diff=true
+      - run: terraform validate -var kops_cluster_name=hello.k8s.local -var kubernetes_ingress_domain=hello.example.com

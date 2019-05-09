@@ -1,7 +1,7 @@
 resource "aws_efs_file_system" "efs_provisioner" {
   tags = "${merge(
-    map("kubernetes.io/cluster/${var.kubernetes_cluster_name}", "owned"),
-    map("Name", "efs.${var.kubernetes_cluster_name}")
+    map("kubernetes.io/cluster/${var.kops_cluster_name}", "owned"),
+    map("Name", "efs.${var.kops_cluster_name}")
   )}"
 }
 

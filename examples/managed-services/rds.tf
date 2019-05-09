@@ -1,7 +1,7 @@
 resource "aws_db_subnet_group" "allow_from_k8s_nodes" {
-  name       = "allow-from-nodes.${var.kubernetes_cluster_name}"
+  name       = "allow-from-nodes.${var.kops_cluster_name}"
   subnet_ids = ["${data.aws_subnet_ids.kops_subnets.ids}"]
-  tags       = "${map("kubernetes.io/cluster/${var.kubernetes_cluster_name}", "owned")}"
+  tags       = "${map("kubernetes.io/cluster/${var.kops_cluster_name}", "owned")}"
 }
 
 resource "aws_db_instance" "rds_for_k8s_nodes" {
@@ -23,7 +23,7 @@ resource "aws_db_instance" "rds_for_k8s_nodes" {
   parameter_group_name    = "default.postgres9.6"
   skip_final_snapshot     = true
   backup_retention_period = 7
-  tags                    = "${map("kubernetes.io/cluster/${var.kubernetes_cluster_name}", "owned")}"
+  tags                    = "${map("kubernetes.io/cluster/${var.kops_cluster_name}", "owned")}"
 
   lifecycle {
     ignore_changes = [
