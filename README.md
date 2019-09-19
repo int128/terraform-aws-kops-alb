@@ -45,7 +45,7 @@ Load the module:
 
 ```hcl
 module "kops_alb" {
-  source                    = "github.com/int128/terraform-aws-kops-alb"
+  source                    = "int128/kops-alb/aws"
   kops_cluster_name         = "hello.k8s.local"
   kubernetes_ingress_domain = "hello.example.com"
 }
